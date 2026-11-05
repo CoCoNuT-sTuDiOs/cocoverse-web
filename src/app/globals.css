@@ -1,26 +1,200 @@
 @import "tailwindcss";
 
+/* Dark is the default look. Light is the soft paper one. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --bg: #0b0a09;
+  --surface-1: #161412;
+  --surface-2: #1f1c18;
+  --ink: #f3eee4;
+  --ink-dim: #a59e91;
+  --line: rgba(243, 238, 228, 0.08);
+  --gold: #e8b64a;
+  --gold-bright: #f5d589;
+  --gold-deep: #b8862b;
+  --gold-text: #e8b64a;
+  --teal: #34d1bf;
+  --coral: #ff7a59;
+  --violet: #7b5cff;
+  /* Clay: a soft light edge on the top-left, a deep shadow underneath. */
+  --clay-raised: 10px 10px 24px rgba(0, 0, 0, 0.6),
+    -6px -6px 16px rgba(255, 235, 190, 0.04),
+    inset 1px 1px 2px rgba(255, 235, 190, 0.09),
+    inset -2px -2px 5px rgba(0, 0, 0, 0.5);
+  --clay-pressed: inset 6px 6px 14px rgba(0, 0, 0, 0.6),
+    inset -4px -4px 10px rgba(255, 235, 190, 0.04);
 }
 
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f4efe6;
+  --surface-1: #faf6ee;
+  --surface-2: #e9e2d3;
+  --ink: #1c1a17;
+  --ink-dim: #6b645a;
+  --line: rgba(28, 26, 23, 0.1);
+  --gold: #c9922b;
+  --gold-bright: #e0ac45;
+  --gold-deep: #9a6b14;
+  --gold-text: #9a6b14;
+  --teal: #1f9e8e;
+  --coral: #e4572e;
+  --violet: #5b3fe0;
+  --clay-raised: 8px 8px 20px rgba(120, 100, 70, 0.18),
+    -8px -8px 20px rgba(255, 255, 255, 0.7),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+    inset -3px -3px 6px rgba(120, 100, 70, 0.12);
+  --clay-pressed: inset 5px 5px 12px rgba(120, 100, 70, 0.22),
+    inset -5px -5px 12px rgba(255, 255, 255, 0.7);
+}
+
+/* Tailwind names for the tokens and fonts. */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-dim: var(--ink-dim);
+  --color-line: var(--line);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-text: var(--gold-text);
+  --color-teal: var(--teal);
+  --color-coral: var(--coral);
+  --color-violet: var(--violet);
+  --font-logo: var(--font-bagel);
+  --font-heading: var(--font-fraunces);
+  --font-sans: var(--font-syne);
+  --font-mono: var(--font-syne-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--bg);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-syne), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headings: Fraunces, soft and a little wonky, so it feels like clay. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+
+code,
+pre {
+  font-family: var(--font-syne-mono), ui-monospace, monospace;
+}
+
+/* A raised clay surface. */
+.clay {
+  background: var(--surface-1);
+  border-radius: 28px;
+  box-shadow: var(--clay-raised);
+}
+
+.clay-pressed {
+  background: var(--surface-1);
+  border-radius: 28px;
+  box-shadow: var(--clay-pressed);
+}
+
+
+/* Things GSAP reveals start hidden, but only while scripts are running, so
+   robots and visitors without JavaScript still get everything. */
+.js [data-reveal],
+.js [data-cell] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal],
+  .js [data-cell] {
+    opacity: 1;
+  }
+}
+
+/* The phone lifts a little when you point at it. */
+[data-cell] .cvp-body {
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (hover: hover) {
+  [data-cell]:hover .cvp-body {
+    transform: translateY(-8px);
+  }
+}
+
+/* A soft, puffy clay surface: broad light across the top, a gentle shade at
+   the bottom, a lit top edge and a very fine grain. The colour stays the
+   page's own; only the texture is added. */
+.clay-fluff {
+  --fluff-edge: rgba(255, 235, 190, 0.12);
+  --fluff-light: rgba(255, 235, 190, 0.05);
+  --fluff-shade: rgba(0, 0, 0, 0.4);
+  --fluff-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.14 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-color: var(--bg);
+  background-image:
+    var(--fluff-grain),
+    radial-gradient(70% 38% at 18% 0%, var(--fluff-light), transparent),
+    radial-gradient(60% 32% at 86% 4%, var(--fluff-light), transparent),
+    radial-gradient(90% 40% at 50% 100%, var(--fluff-shade), transparent);
+  box-shadow:
+    0 -24px 60px -30px rgba(0, 0, 0, 0.45),
+    inset 0 2px 0 var(--fluff-edge),
+    inset 0 36px 56px -34px var(--fluff-light),
+    inset 0 -40px 70px -40px var(--fluff-shade);
+}
+
+
+/* While the floating button is out, the header's own logo and theme button
+   step aside. They keep their space, so nothing in the layout moves. */
+html[data-docked] [data-hdr] {
+  visibility: hidden !important;
+}
+
+
+[data-theme="light"] .clay-fluff {
+  --fluff-edge: rgba(255, 255, 255, 0.95);
+  --fluff-light: rgba(255, 255, 255, 0.7);
+  --fluff-shade: rgba(120, 100, 70, 0.14);
+  --fluff-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.2 0 0 0 0 0.15 0 0 0 0.12 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* The gold button: the one loud thing on the page. */
+
+.btn-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  color: #1c1405;
+  background: linear-gradient(160deg, var(--gold-bright), var(--gold) 55%, var(--gold-deep));
+  box-shadow: var(--clay-raised);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-gold:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: var(--clay-pressed);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
 }

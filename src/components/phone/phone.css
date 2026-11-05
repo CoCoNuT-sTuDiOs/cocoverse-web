@@ -1,0 +1,320 @@
+/* The clay phone. Everything is sized in cqw (1% of the phone's width), so it
+   scales with whatever space it is given. */
+.cvp {
+  container-type: inline-size;
+  width: 100%;
+}
+
+.cvp-body {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 78 / 158;
+  border-radius: 14cqw;
+  background: linear-gradient(155deg, #2b2722 0%, #1a1714 55%, #100e0c 100%);
+  box-shadow:
+    1.6cqw 2.4cqw 5cqw rgba(0, 0, 0, 0.65),
+    inset 0.5cqw 0.5cqw 1.2cqw rgba(255, 235, 190, 0.14),
+    inset -0.8cqw -0.8cqw 1.8cqw rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="light"] .cvp-body {
+  background: linear-gradient(155deg, #f6f0e4 0%, #e4dbc9 55%, #d5cab4 100%);
+  box-shadow:
+    1.6cqw 2.4cqw 5cqw rgba(120, 100, 70, 0.3),
+    -1.2cqw -1.2cqw 3cqw rgba(255, 255, 255, 0.7),
+    inset 0.5cqw 0.5cqw 1.2cqw rgba(255, 255, 255, 0.8),
+    inset -0.8cqw -0.8cqw 1.8cqw rgba(120, 100, 70, 0.25);
+}
+
+/* Side buttons */
+.cvp-side {
+  position: absolute;
+  width: 1cqw;
+  border-radius: 0.7cqw;
+  background: linear-gradient(90deg, #3a352e, #1a1714);
+  box-shadow: inset 0.2cqw 0.2cqw 0.3cqw rgba(255, 235, 190, 0.15);
+}
+
+[data-theme="light"] .cvp-side {
+  background: linear-gradient(90deg, #f1eadb, #cfc4ad);
+  box-shadow: inset 0.2cqw 0.2cqw 0.3cqw rgba(255, 255, 255, 0.8);
+}
+
+.cvp-vol-up {
+  left: -0.7cqw;
+  top: 34cqw;
+  height: 7cqw;
+}
+
+.cvp-vol-down {
+  left: -0.7cqw;
+  top: 43cqw;
+  height: 7cqw;
+}
+
+.cvp-power {
+  right: -0.7cqw;
+  top: 40cqw;
+  height: 11cqw;
+}
+
+/* The speaker slit in the top bezel */
+.cvp-speaker {
+  position: absolute;
+  top: 9.6cqw;
+  left: 50%;
+  width: 16cqw;
+  height: 1.8cqw;
+  transform: translateX(-50%);
+  border-radius: 1cqw;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow:
+    inset 0.2cqw 0.2cqw 0.5cqw rgba(0, 0, 0, 0.8),
+    0.2cqw 0.2cqw 0.4cqw rgba(255, 235, 190, 0.08);
+}
+
+[data-theme="light"] .cvp-speaker {
+  background: rgba(90, 70, 40, 0.28);
+  box-shadow:
+    inset 0.2cqw 0.2cqw 0.5cqw rgba(90, 70, 40, 0.4),
+    0.2cqw 0.2cqw 0.4cqw rgba(255, 255, 255, 0.8);
+}
+
+/* The screen: top bezel 22.4cqw, bottom bezel 24.4cqw, sides 5.1cqw */
+.cvp-screen {
+  position: absolute;
+  inset: 22.4cqw 5.1cqw 24.4cqw 5.1cqw;
+  border-radius: 4cqw;
+  background: #000;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    0 0 0 0.6cqw rgba(0, 0, 0, 0.7),
+    inset 0 0 0 0.3cqw rgba(255, 255, 255, 0.07);
+}
+
+.cvp-view {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+/* A soft shade at the bottom so the rail reads on any effect */
+.cvp-shade {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 42%;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+  pointer-events: none;
+}
+
+/* The Dynamic Island holds the asset name */
+.cvp-island {
+  position: absolute;
+  top: 2.6cqw;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 1.6cqw;
+  height: 6.4cqw;
+  max-width: 72%;
+  padding: 0 3.2cqw;
+  border-radius: 999px;
+  background: #000;
+  color: rgba(243, 238, 228, 0.92);
+  font: 600 2.8cqw/1 var(--font-syne), system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 0 0 0.25cqw rgba(255, 255, 255, 0.05);
+}
+
+.cvp-dot {
+  flex: none;
+  width: 1.7cqw;
+  height: 1.7cqw;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 1.6cqw var(--gold);
+  animation: cvp-pulse 2.4s ease-in-out infinite;
+}
+
+.cvp-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes cvp-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* The TikTok-style rail on the RIGHT of the screen: views, copies, likes.
+   Display only. */
+.cvp-rail {
+  position: absolute;
+  right: 2.4cqw;
+  bottom: 12cqw;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4.4cqw;
+  color: #fff;
+  pointer-events: none;
+}
+
+.cvp-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8cqw;
+  font: 700 2.9cqw/1 var(--font-syne), system-ui, sans-serif;
+  text-shadow: 0 0.2cqw 0.8cqw rgba(0, 0, 0, 0.7);
+}
+
+.cvp-icon {
+  width: 7.6cqw;
+  height: 7.6cqw;
+  filter: drop-shadow(0 0.3cqw 0.8cqw rgba(0, 0, 0, 0.65));
+}
+
+/* On a touch screen a tap anywhere on the screen opens the asset */
+.cvp-tap {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The home button: the only way into the asset on desktop */
+.cvp-home {
+  position: absolute;
+  left: 50%;
+  bottom: 5.2cqw;
+  width: 14cqw;
+  height: 14cqw;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  cursor: pointer;
+  background: radial-gradient(circle at 35% 30%, #3a352e, #1c1916 70%);
+  box-shadow:
+    0.8cqw 1cqw 2cqw rgba(0, 0, 0, 0.6),
+    -0.5cqw -0.5cqw 1.2cqw rgba(255, 235, 190, 0.07),
+    inset 0.3cqw 0.3cqw 0.6cqw rgba(255, 235, 190, 0.15),
+    inset -0.4cqw -0.4cqw 0.8cqw rgba(0, 0, 0, 0.6);
+  transition: box-shadow 0.2s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cvp-home::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4.8cqw;
+  height: 4.8cqw;
+  transform: translate(-50%, -50%);
+  border-radius: 1.1cqw;
+  border: 0.35cqw solid rgba(255, 235, 190, 0.28);
+  transition: border-color 0.2s ease;
+}
+
+[data-theme="light"] .cvp-home {
+  background: radial-gradient(circle at 35% 30%, #fbf7ee, #d9cfba 70%);
+  box-shadow:
+    0.8cqw 1cqw 2cqw rgba(120, 100, 70, 0.35),
+    -0.6cqw -0.6cqw 1.4cqw rgba(255, 255, 255, 0.85),
+    inset 0.3cqw 0.3cqw 0.6cqw rgba(255, 255, 255, 0.9),
+    inset -0.4cqw -0.4cqw 0.8cqw rgba(120, 100, 70, 0.25);
+}
+
+[data-theme="light"] .cvp-home::after {
+  border-color: rgba(120, 100, 70, 0.4);
+}
+
+@media (hover: hover) {
+  .cvp-home:hover {
+    box-shadow:
+      0.8cqw 1cqw 2cqw rgba(0, 0, 0, 0.5),
+      0 0 0 0.5cqw var(--gold),
+      0 0 4cqw rgba(232, 182, 74, 0.45);
+  }
+
+  .cvp-home:hover::after {
+    border-color: var(--gold-bright);
+  }
+}
+
+.cvp-home:active {
+  transform: translateX(-50%) scale(0.95);
+  box-shadow:
+    inset 0.8cqw 0.8cqw 1.6cqw rgba(0, 0, 0, 0.6),
+    inset -0.5cqw -0.5cqw 1cqw rgba(255, 235, 190, 0.06),
+    0 0 0 0.5cqw var(--gold);
+}
+
+.cvp-home:focus-visible {
+  outline: 0.6cqw solid var(--gold-bright);
+  outline-offset: 0.8cqw;
+}
+
+/* A stand-in for the live preview, until the real effects are wired in */
+.cvp-ph {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: radial-gradient(120% 80% at 50% 110%, #1a1530, #000 60%);
+}
+
+.cvp-orb {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 46cqw;
+  height: 46cqw;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at 32% 28%, #fff7d6, var(--gold) 38%, #5a3a05 90%);
+  box-shadow: 0 0 10cqw rgba(232, 182, 74, 0.35);
+  animation: cvp-float 5s ease-in-out infinite;
+}
+
+@keyframes cvp-float {
+  0%,
+  100% {
+    transform: translate(-50%, -50%);
+  }
+  50% {
+    transform: translate(-50%, -57%);
+  }
+}
+
+.cvp-ghost {
+  position: absolute;
+  inset: auto 0 14cqw 0;
+  text-align: center;
+  font: 700 3.2cqw/1 var(--font-syne), system-ui, sans-serif;
+  color: rgba(243, 238, 228, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cvp-dot,
+  .cvp-orb {
+    animation: none;
+  }
+}
