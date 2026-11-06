@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync-flutter": "node scripts/sync-flutter.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
