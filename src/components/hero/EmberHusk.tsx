@@ -323,6 +323,8 @@ const DAMPING = 0.88
 /** The single frame drawn for a visitor who has asked for less movement. */
 const FROZEN_TIME = 8
 
+/** Seconds of animation after the last touch before the piece stops drawing. */
+const IDLE_AFTER = 10
 const MAX_SHARDS = 24
 const MAX_CROSSES = 260
 const MAX_DEBRIS = 160
@@ -1449,6 +1451,9 @@ function __OriginkitBase_EmberHusk(props: EmberHuskProps) {
         canvas.style.position = "absolute"
         canvas.style.inset = "0"
         canvas.style.display = "block"
+        // Hidden until the first frame is drawn, then faded in.
+        canvas.style.opacity = "0"
+        canvas.style.transition = "opacity 0.9s ease"
         container.appendChild(canvas)
 
         const scene = new THREE.Scene()
@@ -1895,7 +1900,11 @@ function __OriginkitBase_EmberHusk(props: EmberHuskProps) {
 
         resize()
 
-        const ro = new ResizeObserver(resize)
+        const ro = new ResizeObserver(() => {
+            resize()
+            // A resize wipes the canvas, so a sleeping piece draws itself once.
+            if (!running) paintOnce()
+        })
         ro.observe(container)
 
         let onScreen = true
@@ -1926,8 +1935,10 @@ function __OriginkitBase_EmberHusk(props: EmberHuskProps) {
                 -(((e.clientY - rect.top) / rect.height) * 2 - 1)
             )
             over = true
+                        wake()
         }
         const onPointerLeave = () => {
+            wake()
             over = false
         }
 
@@ -1935,7 +1946,8 @@ function __OriginkitBase_EmberHusk(props: EmberHuskProps) {
         canvas.addEventListener("pointerenter", onPointerMove)
         canvas.addEventListener("pointerleave", onPointerLeave)
         canvas.addEventListener("pointercancel", onPointerLeave)
-
+        const onPointerDown = () => wake()
+        canvas.addEventListener("pointerdown", onPointerDown)
         /* ------------------------------------------------------ params */
 
         let lastQuality = p0.quality
@@ -2317,6 +2329,7 @@ function __OriginkitBase_EmberHusk(props: EmberHuskProps) {
                 dirty = false
                 settle()
                 renderFrame(FROZEN_TIME, 0)
+                reveal()
                 return
             }
             if (!onScreen) return
@@ -2324,16 +2337,56 @@ function __OriginkitBase_EmberHusk(props: EmberHuskProps) {
             const t = clock.getElapsedTime()
             const dt = Math.min(0.1, t - last)
             last = t
-            renderFrame(t, dt)
+            animTime += dt
+            renderFrame(animTime, dt)
+            reveal()
+            // Ten seconds with nobody touching it: stop drawing altogether.
+            if (animTime >= activeUntil) goIdle()
+
         }
 
-        renderer.setAnimationLoop(loop)
+        /** Time the piece has really spent animating. The idle stretch does not
+         *  count, so the turn picks up where it stopped instead of jumping. */
+        let animTime = 0
+        let activeUntil = IDLE_AFTER
+        let running = false
+        let shown = false
+
+        const reveal = () => {
+            if (shown) return
+            shown = true
+            void canvas.offsetWidth
+            canvas.style.opacity = "1"
+        }
+
+        const goIdle = () => {
+            running = false
+            renderer.setAnimationLoop(null)
+        }
+
+        const wake = () => {
+            activeUntil = animTime + IDLE_AFTER
+            if (running) return
+            running = true
+            last = clock.getElapsedTime()
+            renderer.setAnimationLoop(loop)
+        }
+
+        /** One frame while asleep, for a resize or a changed prop. */
+        const paintOnce = () => {
+            if (running) return
+            renderFrame(animTime, 0)
+        }
+
+        wake()
 
         apiRef.current = {
             invalidate: () => {
-                dirty = true
+                if (!running) paintOnce()
+            dirty = true
             },
             rebuild: () => {
+                wake()
                 build()
                 dirty = true
             },
@@ -2349,7 +2402,7 @@ function __OriginkitBase_EmberHusk(props: EmberHuskProps) {
             canvas.removeEventListener("pointerenter", onPointerMove)
             canvas.removeEventListener("pointerleave", onPointerLeave)
             canvas.removeEventListener("pointercancel", onPointerLeave)
-
+            canvas.removeEventListener("pointerdown", onPointerDown)
             disposeHusk()
             crossGeo.dispose()
             debrisGeo.dispose()

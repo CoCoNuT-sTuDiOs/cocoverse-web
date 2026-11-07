@@ -78,7 +78,7 @@ export function FlutterPreview({ slug }: { slug: string }) {
   function sleepAfter(ms: number) {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => {
-      if (activePhone.get() === slug) activePhone.set(null);
+            if (activePhone.get() === slug && !activePhone.isHeld(slug)) activePhone.set(null);
     }, ms);
   }
 
@@ -112,7 +112,7 @@ export function FlutterPreview({ slug }: { slug: string }) {
     >
       <div ref={hostRef} className="cvp-host" style={{ opacity: ready ? 1 : 0 }} />
       {!ready ? <PreviewPoster /> : null}
-      {ready && !active && !touch ? (
+      {ready && !active ? (
         <button
           type="button"
           className="cvp-wake"

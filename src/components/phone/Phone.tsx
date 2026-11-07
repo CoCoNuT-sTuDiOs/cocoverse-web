@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon } from "@iconify/react";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { formatCount } from "@/lib/format";
 import { useTouchOnly } from "@/lib/useTouchOnly";
 import "./phone.css";
@@ -14,7 +14,7 @@ export type PhoneProps = {
   views: number;
   copies: number;
   likes: number;
-  /** Called when the user opens the asset: the home button on desktop, a tap anywhere on a touch screen. */
+  /** Called when the user opens the asset: the home button, or on a touch screen a tap on the phone body outside the screen. */
   onOpen?: () => void;
   /** The live preview. It fills the screen. */
   children?: ReactNode;
@@ -33,9 +33,18 @@ function Stat({ icon, value }: { icon: string; value: number }) {
 export function Phone({ slug, name, views, copies, likes, onOpen, children }: PhoneProps) {
   const touch = useTouchOnly();
 
+  /** On a touch screen the screen itself plays the asset, so the page opens
+   *  from a tap on the phone body anywhere that is not the screen. */
+  function onBodyTap(event: MouseEvent<HTMLDivElement>) {
+    if (!touch) return;
+    const target = event.target as HTMLElement;
+    if (target.closest(".cvp-screen") || target.closest(".cvp-home")) return;
+    onOpen?.();
+  }
+
   return (
-    <div className="cvp" data-asset-slug={slug}>
-      <div className="cvp-body" role="group" aria-label={`${name} preview`}>
+      <div className="cvp" data-asset-slug={slug}>
+              <div className="cvp-body" role="group" aria-label={`${name} preview`} onClick={onBodyTap}>
         <span className="cvp-side cvp-vol-up" aria-hidden="true" />
         <span className="cvp-side cvp-vol-down" aria-hidden="true" />
         <span className="cvp-side cvp-power" aria-hidden="true" />
@@ -53,14 +62,6 @@ export function Phone({ slug, name, views, copies, likes, onOpen, children }: Ph
             <span className="cvp-dot" aria-hidden="true" />
             <span className="cvp-name">{name}</span>
           </div>
-          {touch ? (
-            <button
-              type="button"
-              className="cvp-tap"
-              aria-label={`Open ${name}`}
-              onClick={onOpen}
-            />
-          ) : null}
         </div>
 
         <button

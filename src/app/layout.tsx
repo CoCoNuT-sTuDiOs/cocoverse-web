@@ -40,10 +40,12 @@ export const metadata: Metadata = {
 // Sets the theme before the page paints, so there is no flash of the wrong one.
 const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.dataset.theme=t;}catch(e){}document.documentElement.classList.add('js');})();`;
 
+
 export default function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
-  return (
+  modal,
+}: Readonly<{ children: React.ReactNode; modal: React.ReactNode }>) {
+return (
     <html
       lang="en"
       suppressHydrationWarning
@@ -56,6 +58,7 @@ export default function RootLayout({
       <Header />
         <FloatingDock />
         {children}
+        {modal}
       </body>
     </html>
   );

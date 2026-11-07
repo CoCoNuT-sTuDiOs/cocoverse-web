@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react";
 import gsap from "gsap";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter  } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Scroll distance at which the logo is pulled into the button, and how close
@@ -12,29 +12,12 @@ const UNDOCK_AT = 4;
 
 /** One 48px button plus its 12px gap. */
 const TRAY_WIDTH = 60;
-
-/**
- * As soon as the page scrolls, the header logo is pulled into the theme
- * button like iron into a magnet. The button turns into a home button, drops
- * to the bottom-right corner and lands with a squash. Press it and a small
- * clay bar opens with the theme switch beside the home button. Scrolling back
- * to the top plays the whole thing in reverse.
- *
- * The header itself is never touched: this draws copies of its logo and
- * button on top of it, then hides the originals while the copies are out.
- */
 export function FloatingDock() {
   const root = useRef<HTMLDivElement>(null);
   const openRef = useRef(false);
-  const pathRef = useRef("/");
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    pathRef.current = pathname;
-  }, [pathname]);
 
   // Keep the icons in step with the page's theme, whoever changed it.
   useEffect(() => {
@@ -238,7 +221,7 @@ export function FloatingDock() {
       return;
     }
     setTray(false);
-    if (pathRef.current === "/") window.scrollTo({ top: 0, behavior: "smooth" });
+     if (window.location.pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" });
     else router.push("/");
   }
 

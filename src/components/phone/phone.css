@@ -312,6 +312,15 @@
   height: 4.4cqw;
 }
 
+
+/* The phone that was opened sits above the blur veil. */
+[data-cell][data-chosen] {
+  position: relative;
+  z-index: 70;
+}
+
+
+
 /* The real preview: a Flutter page in a frame that fills the screen. */
 .cvp-frame {
   position: absolute;

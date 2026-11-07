@@ -126,6 +126,12 @@ pre {
   }
 }
 
+
+/* While the details page has this phone's live view, the grid phone steps aside. */
+[data-cell][data-flying] .cvp {
+  visibility: hidden;
+}
+
 /* The phone lifts a little when you point at it. */
 [data-cell] .cvp-body {
   transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -264,4 +270,333 @@ html[data-docked] [data-hdr] {
   * {
     scroll-behavior: auto !important;
   }
+}
+
+/* ---------- Pelt: the fur of a cute cartoon animal ---------- */
+:root {
+  --pelt-hair-a: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420'><filter id='h' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.75 0.04' numOctaves='3' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.93  0 0 0 0 0.8  2.6 0 0 0 -1.15'/></filter><rect width='100%25' height='100%25' filter='url(%23h)'/></svg>");
+  --pelt-hair-b: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420'><filter id='h' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.1 0.06' numOctaves='3' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.05  0 0 0 0 0.02  2.4 0 0 0 -1.05'/></filter><rect width='100%25' height='100%25' filter='url(%23h)'/></svg>");
+  --pelt-hair-a-op: 0.45;
+  --pelt-hair-b-op: 0.75;
+  --pelt-tuft-op: 0.9;
+  --pelt-lit: rgba(255, 235, 190, 0.1);
+  --pelt-shade: rgba(0, 0, 0, 0.5);
+
+  --glass-a: rgba(255, 255, 255, 0.1);
+  --glass-b: rgba(255, 255, 255, 0.03);
+  --glass-rim-hi: rgba(255, 255, 255, 0.6);
+  --glass-rim-lo: rgba(255, 255, 255, 0.18);
+  --glass-top: rgba(255, 255, 255, 0.35);
+  --glass-sheen: rgba(255, 255, 255, 0.16);
+  --glass-drop: rgba(0, 0, 0, 0.55);
+  --glass-line: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme="light"] {
+  --pelt-hair-a: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420'><filter id='h' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.75 0.04' numOctaves='3' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  2.6 0 0 0 -1.1'/></filter><rect width='100%25' height='100%25' filter='url(%23h)'/></svg>");
+  --pelt-hair-b: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420'><filter id='h' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='1.1 0.06' numOctaves='3' seed='9' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.38  0 0 0 0 0.24  2.4 0 0 0 -1.05'/></filter><rect width='100%25' height='100%25' filter='url(%23h)'/></svg>");
+  --pelt-hair-a-op: 0.95;
+  --pelt-hair-b-op: 0.3;
+  --pelt-tuft-op: 0.6;
+  --pelt-lit: rgba(255, 255, 255, 0.7);
+  --pelt-shade: rgba(120, 100, 70, 0.22);
+
+  --glass-a: rgba(255, 255, 255, 0.42);
+  --glass-b: rgba(255, 255, 255, 0.12);
+  --glass-rim-hi: rgba(255, 255, 255, 1);
+  --glass-rim-lo: rgba(255, 255, 255, 0.45);
+  --glass-top: rgba(255, 255, 255, 0.9);
+  --glass-sheen: rgba(255, 255, 255, 0.5);
+  --glass-drop: rgba(120, 100, 70, 0.35);
+  --glass-line: rgba(28, 26, 23, 0.12);
+}
+
+
+/* The rug: your own page colours only. The base is a theme token, and the fur
+   is made of light and shade laid over it. */
+:root {
+  --fur-base: var(--surface-2);
+  --fur-lit: rgba(255, 235, 190, 0.2);
+  --fur-dark: rgba(0, 0, 0, 0.6);
+  --fur-clump: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] {
+  --fur-base: var(--bg);
+  --fur-lit: rgba(255, 255, 255, 1);
+  --fur-dark: rgba(120, 100, 70, 0.42);
+  --fur-clump: rgba(120, 100, 70, 0.3);
+}
+
+/* The stone is painted once into one image, so scrolling costs nothing. */
+:root {
+  --stone-img: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1920' height='1200'><filter id='s' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.0028 0.0042' numOctaves='3' seed='21' stitchTiles='stitch' result='slab'/><feColorMatrix in='slab' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  5 0 0 0 -2.4' result='slabA'/><feFlood flood-color='rgb(0,0,0)' flood-opacity='0.5'/><feComposite in2='slabA' operator='in' result='slabC'/><feTurbulence type='fractalNoise' baseFrequency='0.34' numOctaves='2' seed='3' stitchTiles='stitch' result='fine'/><feTurbulence type='fractalNoise' baseFrequency='0.0055 0.0075' numOctaves='3' seed='11' stitchTiles='stitch' result='warp'/><feDisplacementMap in='fine' in2='warp' scale='60' xChannelSelector='R' yChannelSelector='G' result='bent'/><feGaussianBlur in='bent' stdDeviation='0.35' result='soft'/><feDiffuseLighting in='soft' surfaceScale='9' diffuseConstant='1' lighting-color='white' result='lit'><feDistantLight azimuth='235' elevation='48'/></feDiffuseLighting><feColorMatrix in='lit' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -16 0 0 0 11' result='darkA'/><feFlood flood-color='rgb(0,0,0)' flood-opacity='0.6'/><feComposite in2='darkA' operator='in' result='darkC'/><feColorMatrix in='lit' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  16 0 0 0 -12.2' result='litA'/><feFlood flood-color='rgb(255,235,190)' flood-opacity='0.2'/><feComposite in2='litA' operator='in' result='litC'/><feFlood flood-color='rgb(31,28,24)' result='base'/><feMerge><feMergeNode in='base'/><feMergeNode in='slabC'/><feMergeNode in='darkC'/><feMergeNode in='litC'/></feMerge></filter><rect width='100%25' height='100%25' filter='url(%23s)'/></svg>");
+}
+
+[data-theme="light"] {
+  --stone-img: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1920' height='1200'><filter id='s' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.0028 0.0042' numOctaves='3' seed='21' stitchTiles='stitch' result='slab'/><feColorMatrix in='slab' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  5 0 0 0 -2.4' result='slabA'/><feFlood flood-color='rgb(120,100,70)' flood-opacity='0.3'/><feComposite in2='slabA' operator='in' result='slabC'/><feTurbulence type='fractalNoise' baseFrequency='0.34' numOctaves='2' seed='3' stitchTiles='stitch' result='fine'/><feTurbulence type='fractalNoise' baseFrequency='0.0055 0.0075' numOctaves='3' seed='11' stitchTiles='stitch' result='warp'/><feDisplacementMap in='fine' in2='warp' scale='60' xChannelSelector='R' yChannelSelector='G' result='bent'/><feGaussianBlur in='bent' stdDeviation='0.35' result='soft'/><feDiffuseLighting in='soft' surfaceScale='9' diffuseConstant='1' lighting-color='white' result='lit'><feDistantLight azimuth='235' elevation='48'/></feDiffuseLighting><feColorMatrix in='lit' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -16 0 0 0 11' result='darkA'/><feFlood flood-color='rgb(120,100,70)' flood-opacity='0.42'/><feComposite in2='darkA' operator='in' result='darkC'/><feColorMatrix in='lit' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  16 0 0 0 -12.2' result='litA'/><feFlood flood-color='rgb(255,255,255)' flood-opacity='1'/><feComposite in2='litA' operator='in' result='litC'/><feFlood flood-color='rgb(244,239,230)' result='base'/><feMerge><feMergeNode in='base'/><feMergeNode in='slabC'/><feMergeNode in='darkC'/><feMergeNode in='litC'/></feMerge></filter><rect width='100%25' height='100%25' filter='url(%23s)'/></svg>");
+}
+
+.pelt {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  contain: strict;
+  transform: translateZ(0);
+  background-color: var(--fur-base);
+  background-image: var(--stone-img);
+  background-size: 1920px 1200px;
+  background-repeat: repeat;
+}
+
+.pelt-layer {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  -webkit-mask-size: 2560px 1600px;
+  mask-size: 2560px 1600px;
+  -webkit-mask-position: center top;
+  mask-position: center top;
+}
+
+/* Big hard slabs of darker stone. */
+.pelt-clump {
+  --stone-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2560' height='1600'><filter id='c' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.0028 0.0042' numOctaves='3' seed='21' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  5 0 0 0 -2.4'/></filter><rect width='100%25' height='100%25' filter='url(%23c)'/></svg>");
+  background: var(--fur-clump);
+  -webkit-mask-image: var(--stone-mask);
+  mask-image: var(--stone-mask);
+}
+
+
+
+/* The shaded face of the stone, cut sharp. */
+.pelt-dark {
+  --stone-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2560' height='1600'><filter id='f' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.34' numOctaves='2' seed='3' stitchTiles='stitch' result='fine'/><feTurbulence type='fractalNoise' baseFrequency='0.0055 0.0075' numOctaves='3' seed='11' stitchTiles='stitch' result='warp'/><feDisplacementMap in='fine' in2='warp' scale='60' xChannelSelector='R' yChannelSelector='G' result='bent'/><feGaussianBlur in='bent' stdDeviation='0.35' result='soft'/><feDiffuseLighting in='soft' surfaceScale='9' diffuseConstant='1' lighting-color='white' result='lit'><feDistantLight azimuth='235' elevation='48'/></feDiffuseLighting><feColorMatrix in='lit' type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -16 0 0 0 11'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  background: var(--fur-dark);
+  -webkit-mask-image: var(--stone-mask);
+  mask-image: var(--stone-mask);
+}
+
+
+/* The lit face of the stone. Same geometry as the shade, so the edges line up. */
+.pelt-lit {
+  --stone-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='2560' height='1600'><filter id='f' x='0' y='0' width='100%25' height='100%25' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.34' numOctaves='2' seed='3' stitchTiles='stitch' result='fine'/><feTurbulence type='fractalNoise' baseFrequency='0.0055 0.0075' numOctaves='3' seed='11' stitchTiles='stitch' result='warp'/><feDisplacementMap in='fine' in2='warp' scale='60' xChannelSelector='R' yChannelSelector='G' result='bent'/><feGaussianBlur in='bent' stdDeviation='0.35' result='soft'/><feDiffuseLighting in='soft' surfaceScale='9' diffuseConstant='1' lighting-color='white' result='lit'><feDistantLight azimuth='235' elevation='48'/></feDiffuseLighting><feColorMatrix in='lit' type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  16 0 0 0 -12.2'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  background: var(--fur-lit);
+  -webkit-mask-image: var(--stone-mask);
+  mask-image: var(--stone-mask);
+}
+
+/* Puffy light on top, soft shade at the bottom, so it looks plush. */
+.pelt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(70% 40% at 20% 0%, var(--pelt-lit), transparent),
+    radial-gradient(60% 34% at 85% 6%, var(--pelt-lit), transparent),
+    radial-gradient(90% 46% at 50% 100%, var(--pelt-shade), transparent);
+}
+
+/* ---------- Liquid glass: a thick lens, bent at the edges, lit like a 3D object ---------- */
+:root {
+  --lq-tint: rgba(255, 255, 255, 0.05);
+  --lq-tint-code: rgba(8, 6, 4, 0.3);
+  --lq-spec: rgba(255, 255, 255, 0.9);
+  --lq-spec-soft: rgba(255, 255, 255, 0.45);
+  --lq-glow: rgba(255, 255, 255, 0.12);
+  --lq-shade: rgba(0, 0, 0, 0.4);
+  --lq-drop: rgba(0, 0, 0, 0.6);
+  --lq-line: rgba(255, 255, 255, 0.16);
+}
+
+[data-theme="light"] {
+  --lq-tint: rgba(255, 255, 255, 0.22);
+  --lq-tint-code: rgba(255, 255, 255, 0.32);
+  --lq-spec: rgba(255, 255, 255, 1);
+  --lq-spec-soft: rgba(255, 255, 255, 0.85);
+  --lq-glow: rgba(255, 255, 255, 0.45);
+  --lq-shade: rgba(120, 100, 70, 0.3);
+  --lq-drop: rgba(90, 70, 40, 0.35);
+  --lq-line: rgba(28, 26, 23, 0.14);
+}
+
+/* Browsers that cannot bend the backdrop keep this blur. LiquidGlass.tsx adds the bend. */
+.liquid {
+  --lq-frame: rgba(255, 255, 255, 0.1);
+  position: relative;
+  isolation: isolate;
+  padding: 14px;
+  border-radius: 32px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05) 45%, rgba(255, 255, 255, 0.12));
+  -webkit-backdrop-filter: blur(10px) saturate(160%);
+  backdrop-filter: blur(10px) saturate(160%);
+  box-shadow:
+    0 36px 60px -26px var(--lq-drop),
+    0 6px 16px -6px var(--lq-drop),
+    inset 0 0 0 1px var(--lq-line),
+    inset 0 0 0 14px var(--lq-frame),
+    inset 5px 6px 12px -3px var(--lq-spec-soft),
+    inset -5px -6px 12px -3px var(--lq-spec-soft),
+    inset 0 0 40px var(--lq-glow),
+    inset 0 -18px 30px -18px var(--lq-shade);
+}
+
+[data-theme="light"] .liquid {
+  --lq-frame: rgba(255, 255, 255, 0.35);
+}
+
+/* The bright specular rim: strongest at the top-left, again faintly at the bottom-right. */
+.liquid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--lq-spec), transparent 30%, transparent 70%, var(--lq-spec-soft));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* A soft reflection streak across the whole glass, over the paper too. */
+.liquid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.12) 18%, transparent 34%, transparent 70%, rgba(255, 255, 255, 0.08) 84%, transparent 100%);
+  pointer-events: none;
+}
+
+/* The code panel is a little smokier so the text stays easy to read. */
+.liquid.liquid-code {
+  --lq-frame: transparent;
+  padding: 0;
+  background: var(--lq-tint-code);
+}
+
+/* ---------- A4-like paper that sits inside the glass ---------- */
+.paper {
+  --paper-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.28  0 0 0 0 0.18  0 0 0 0.09 0'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>");
+  position: relative;
+  border-radius: 6px;
+  color: #2a2620;
+  background-color: #fbf8f1;
+  background-image: var(--paper-grain), linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(120, 100, 70, 0.06));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 16px 28px -10px rgba(0, 0, 0, 0.6),
+    0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .paper {
+  background-color: #fffdf8;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 14px 26px -10px rgba(90, 70, 40, 0.4),
+    0 2px 5px rgba(90, 70, 40, 0.2);
+}
+
+.paper-head {
+  color: #7a7266;
+  border-bottom: 2px solid rgba(42, 38, 32, 0.3);
+}
+
+.paper-row {
+  border-top: 1px solid rgba(42, 38, 32, 0.14);
+}
+
+.paper-name {
+  color: #8a5f0f;
+}
+
+.paper-dim {
+  color: #7a7266;
+}
+
+/* ---------- Text set into the stone, built for reading first ---------- */
+:root {
+  --carve-fill: var(--ink);
+  --carve-gold: var(--gold-text);
+  /* Top edge and lower lip give the cut-in look. The halo quiets the stone behind the letters. */
+  --carve-shadow:
+    0 -1px 0 rgba(0, 0, 0, 0.95),
+    0 1px 0 rgba(255, 235, 190, 0.2),
+    0 0 2px rgba(0, 0, 0, 0.95),
+    0 0 7px rgba(0, 0, 0, 0.8),
+    0 0 14px rgba(0, 0, 0, 0.5);
+
+}
+
+[data-theme="light"] {
+  --carve-fill: var(--ink);
+  --carve-gold: color-mix(in srgb, var(--gold-text) 72%, black);
+  --carve-shadow:
+    0 1px 0 rgba(255, 255, 255, 1),
+    0 -1px 0 rgba(70, 55, 30, 0.3),
+    0 0 2px rgba(244, 239, 230, 1),
+    0 0 8px rgba(244, 239, 230, 1),
+    0 0 18px rgba(244, 239, 230, 0.95),
+    0 0 32px rgba(244, 239, 230, 0.8);
+}
+
+/* Light mode: a wash over the stone so its bright speckles stop competing with the text. */
+[data-theme="light"] .pelt::after {
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+
+.carve {
+  color: var(--carve-fill);
+  text-shadow: var(--carve-shadow);
+}
+
+.carve-body {
+  color: var(--carve-fill);
+  font-weight: 600;
+  text-shadow: var(--carve-shadow);
+}
+
+.carve-gold {
+  color: var(--carve-gold);
+  font-weight: 700;
+  text-shadow: var(--carve-shadow);
+}
+
+/* Everything under the hero shares one carved look, whatever markup it uses. */
+.docs-carve {
+  color: var(--carve-fill);
+  font-weight: 600;
+  text-shadow: var(--carve-shadow);
+}
+
+.docs-carve .text-ink-dim,
+.docs-carve .text-ink {
+  color: var(--carve-fill);
+}
+
+.docs-carve .text-gold-text,
+.docs-carve code {
+  color: var(--carve-gold);
+  font-weight: 700;
+}
+
+/* Code blocks are carved in the plain text colour, not gold. */
+.docs-carve pre code {
+  color: var(--carve-fill);
+  font-weight: 400;
+}
+
+/* The paper keeps its own ink, with no carving. */
+.docs-carve .paper {
+  color: #2a2620;
+  font-weight: 400;
+  text-shadow: none;
+}
+
+.docs-carve .paper code {
+  font-weight: 400;
 }

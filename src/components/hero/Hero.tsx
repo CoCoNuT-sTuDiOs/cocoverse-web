@@ -59,8 +59,7 @@ export function Hero() {
   );
 
   return (
-    <section ref={root} className="relative overflow-hidden">
-
+    <section ref={root} className="relative overflow-x-clip">
       <div className="relative mx-auto grid max-w-[1400px] items-center gap-12 px-6  pb-32 pt-6 md:grid-cols-[1.05fr_0.95fr] md:gap-8 md:pb-40 lg:min-h-[78svh]">
         <div>
           <h1 data-headline data-reveal className="mt-6 text-[clamp(3rem,8vw,6.5rem)]">
@@ -106,8 +105,9 @@ export function Hero() {
               }}
             />
             <div
-              className="absolute inset-0"
+              className="absolute"
               style={{
+                  inset: "-20%",
                 WebkitMaskImage: "radial-gradient(closest-side, #000 94%, transparent 100%)",
                 maskImage: "radial-gradient(closest-side, #000 94%, transparent 100%)",
               }}

@@ -13,6 +13,22 @@ const EmberHusk = dynamic(() => import("./EmberHusk"), {
 export function HeroAsset() {
   const touch = useTouchOnly();
   const [wide, setWide] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  // The stone waits until the page itself has finished loading, so its
+  // download never competes with the text and the first paint.
+  useEffect(() => {
+    let timer = 0;
+    const go = () => {
+      timer = window.setTimeout(() => setReady(true), 400);
+    };
+    if (document.readyState === "complete") go();
+    else window.addEventListener("load", go, { once: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("load", go);
+    };
+  }, []);
 
   // Phones never render the stone, so its code is never even downloaded.
   useEffect(() => {
@@ -23,6 +39,6 @@ export function HeroAsset() {
     return () => query.removeEventListener("change", update);
   }, []);
 
-  if (!wide) return null;
-  return <EmberHusk quality={touch ? "low" : "high"} style={{ background: "transparent" }} />;
+if (!wide || !ready) return null;
+  return <EmberHusk size={1} quality={touch ? "low" : "high"} style={{ background: "transparent" }} />;
 }

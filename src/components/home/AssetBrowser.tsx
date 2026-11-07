@@ -3,12 +3,13 @@
 import { useGSAP } from "@gsap/react";
 import { Icon } from "@iconify/react";
 import gsap from "gsap";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FlutterPreview } from "@/components/phone/FlutterPreview";
 import { Phone } from "@/components/phone/Phone";
 import { activePhone } from "@/lib/activePhone";
 import { type Asset, type SortKey, SORTS, sortAssets } from "@/lib/assets";
-import { useTouchOnly } from "@/lib/useTouchOnly";
+import { phoneFlight } from "@/lib/flight";
 
 gsap.registerPlugin(useGSAP);
 
@@ -16,8 +17,13 @@ const PER_PAGE_DESKTOP = 8;
 const PER_PAGE_MOBILE = 4;
 
 export function AssetBrowser({ assets }: { assets: Asset[] }) {
-  const touch = useTouchOnly();
   const grid = useRef<HTMLDivElement>(null);
+  const veil = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const onAsset = pathname.startsWith("/asset");
+  const pushTimer = useRef(0);
+  const [chosen, setChosen] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>("recent");
   const [page, setPage] = useState(1);
   const [small, setSmall] = useState(false);
@@ -50,14 +56,57 @@ export function AssetBrowser({ assets }: { assets: Asset[] }) {
     grid.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+
   function open(slug: string) {
-    // On a touch screen the first tap wakes the phone and the second opens it.
-    if (touch && activePhone.get() !== slug) {
-      activePhone.set(slug);
+    if (chosen) return;
+    // Remember where the phone is, so the details page can grow out of it.
+    const body = document.querySelector<HTMLElement>(`[data-cell] [data-asset-slug="${slug}"] .cvp-body`);
+    const r = body?.getBoundingClientRect();
+    if (r) {
+      phoneFlight.set({ slug, rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+    }
+    setChosen(slug);
+    activePhone.set(slug);
+    // Let the blur settle for a moment, then go.
+    pushTimer.current = window.setTimeout(() => router.push(`/asset/${slug}`, { scroll: false }), 450);
+  }
+
+
+  /** Lets the blur go and puts the chosen phone back in the grid. */
+
+  function release() {
+    window.clearTimeout(pushTimer.current);
+    const el = veil.current;
+  if (!el) {
+      setChosen(null);
       return;
     }
-    console.log("open", slug); // the asset page comes next
+    gsap.to(el, { autoAlpha: 0, duration: 0.35, ease: "power2.in", onComplete: () => setChosen(null) });
   }
+
+  // Back on the home page after a details page: let the blur go.
+  useEffect(() => {
+    if (pathname === "/" && chosen) release();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // While a phone is chosen: the veil fades in, the page stops scrolling and Escape lets go.
+  useEffect(() => {
+    const el = veil.current;
+    if (!chosen || !el) return;
+    const html = document.documentElement;
+    html.style.overflow = "hidden";
+    gsap.fromTo(el, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: "power2.out" });
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") release();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      html.style.overflow = "";
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chosen]);
 
   // The phones on the current page rise in whenever the page or the sort changes.
   useGSAP(
@@ -75,8 +124,17 @@ export function AssetBrowser({ assets }: { assets: Asset[] }) {
     { scope: grid, dependencies: [key], revertOnUpdate: true },
   );
 
-  return (
+
+    return (
     <div>
+      {chosen ? (
+        <div
+          ref={veil}
+          aria-hidden="true"
+          onClick={release}
+          className="fixed inset-0 z-[65] cursor-zoom-out bg-bg/40 opacity-0 backdrop-blur-xl"
+        />
+      ) : null}
       <div className="flex flex-wrap items-end justify-between gap-6">
         <h2 className="text-3xl md:text-5xl">Explore the kit</h2>
         <div role="tablist" aria-label="Sort effects" className="flex flex-wrap gap-3">
@@ -105,7 +163,13 @@ export function AssetBrowser({ assets }: { assets: Asset[] }) {
 
       <div ref={grid} className="mt-12 grid grid-cols-2 gap-x-4 gap-y-14 md:grid-cols-4 md:gap-x-10">
         {visible.map((a) => (
-          <div key={a.slug} data-cell className="mx-auto w-full max-w-[320px]">
+          <div
+            key={a.slug}
+            data-cell
+            data-chosen={chosen === a.slug ? "" : undefined}
+            data-flying={chosen === a.slug && onAsset ? "" : undefined}
+            className="mx-auto w-full max-w-[320px]"
+          >
             <Phone
               slug={a.slug}
               name={a.name}
@@ -127,7 +191,7 @@ export function AssetBrowser({ assets }: { assets: Asset[] }) {
               <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="7" result="noise" />
               <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G" />
             </filter>
-          </svg>
+          </svg> 
         <button
             type="button"
             aria-label="Previous page"
