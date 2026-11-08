@@ -266,9 +266,143 @@ html[data-docked] [data-hdr] {
   box-shadow: var(--clay-pressed);
 }
 
+
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Fluff buttons: the same soft grain as the surface, raised like clay ---------- */
+.clay-fluff.fluff-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.6rem 1.35rem;
+  border-radius: 999px;
+  background-color: var(--surface-1);
+  color: var(--ink);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: var(--clay-raised), inset 0 2px 0 var(--fluff-edge);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.clay-fluff.fluff-btn.fluff-btn-icon {
+  width: 2.75rem;
+  padding: 0;
+  color: var(--gold-text);
+}
+
+@media (hover: hover) {
+  .clay-fluff.fluff-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+  }
+}
+
+.clay-fluff.fluff-btn:active {
+  transform: scale(0.95);
+  box-shadow: var(--clay-pressed);
+}
+
+.clay-fluff.fluff-btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* Text on the fluff: a lit lip underneath, so it looks soft and pressed in. */
+.fluff-text {
+  color: var(--ink-dim);
+  text-shadow: 0 1px 0 var(--fluff-edge), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .fluff-text {
+  text-shadow: 0 1px 0 var(--fluff-edge);
+}
+@media (prefers-reduced-motion: reduce) {
+  .clay-fluff.fluff-btn {
+    transition: none;
+  }
+}
+
+/* ---------- Fur: the footer and its buttons, painted once by the mohair shader ---------- */
+.fur-surface {
+  position: relative;
+  isolation: isolate;
+}
+
+.fur-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--fur-img, none);
+  background-size: var(--fur-w, auto) var(--fur-h, auto);
+  background-position: center top;
+  background-repeat: repeat;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+}
+
+.fur-surface[data-fur="ready"]::before {
+  opacity: 1;
+}
+
+.fur-btn {
+  --fur-wash: color-mix(in srgb, var(--bg) 40%, transparent);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.6rem 1.35rem;
+  border-radius: 999px;
+  background-color: var(--surface-2);
+  background-image: linear-gradient(var(--fur-wash), var(--fur-wash)), var(--fur-img, none);
+  background-size: 100% 100%, var(--fur-w, auto) var(--fur-h, auto);
+  background-position: center, center;
+  background-repeat: no-repeat, repeat;
+  color: var(--ink);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: var(--clay-raised);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.fur-btn.fur-btn-icon {
+  width: 2.75rem;
+  padding: 0;
+  color: var(--gold-text);
+}
+
+@media (hover: hover) {
+  .fur-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+  }
+}
+
+.fur-btn:active {
+  transform: scale(0.95);
+  box-shadow: var(--clay-pressed);
+}
+
+.fur-btn:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fur-btn {
+    transition: none;
   }
 }
 

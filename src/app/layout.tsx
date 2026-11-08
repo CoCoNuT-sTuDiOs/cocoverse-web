@@ -3,6 +3,7 @@ import { Bagel_Fat_One, Fraunces, Syne, Syne_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "../components/Header";
 import { FloatingDock } from "../components/FloatingDock";
+import { SiteFooter } from "../components/SiteFooter";
 
 const bagel = Bagel_Fat_One({
   weight: "400",
@@ -58,6 +59,7 @@ return (
       <Header />
         <FloatingDock />
         {children}
+        <SiteFooter/>
         {modal}
       </body>
     </html>

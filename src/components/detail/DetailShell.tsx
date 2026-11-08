@@ -8,8 +8,11 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Phone } from "@/components/phone/Phone";
 import type { Asset } from "@/lib/assets";
 import { phoneFlight } from "@/lib/flight";
+import { countCopy, countHeart, countView, markAsked, shouldAskHeart } from "@/lib/statsClient";
 import { CopyCode } from "./CopyCode";
+import { HeartPrompt } from "./HeartPrompt";
 import { HeroPreview } from "./HeroPreview";
+import { SiteFooter } from "../SiteFooter";
 
 gsap.registerPlugin(useGSAP);
 
@@ -27,7 +30,30 @@ export function DetailShell({ asset, summary, getCode, modal = false, children }
   const root = useRef<HTMLDivElement>(null);
   const bg = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
-    const tl = useRef<gsap.core.Timeline | null>(null);
+  const tl = useRef<gsap.core.Timeline | null>(null);
+  const [counts, setCounts] = useState({ views: asset.views, copies: asset.copies, likes: asset.likes });
+  const [asking, setAsking] = useState(false);
+
+  // Opening the page counts as one view per visitor session.
+  useEffect(() => {
+    if (countView(asset.slug)) setCounts((c) => ({ ...c, views: c.views + 1 }));
+  }, [asset.slug]);
+
+  function handleCopied() {
+    if (countCopy(asset.slug)) setCounts((c) => ({ ...c, copies: c.copies + 1 }));
+    if (shouldAskHeart(asset.slug)) window.setTimeout(() => setAsking(true), 450);
+  }
+
+  function later() {
+    markAsked(asset.slug);
+    setAsking(false);
+  }
+
+  function heart() {
+    markAsked(asset.slug);
+    setAsking(false);
+    if (countHeart(asset.slug)) setCounts((c) => ({ ...c, likes: c.likes + 1 }));
+  }
   const [live, setLive] = useState(true);
 
   // The live 3D only runs while the phone is on screen. Scrolled away, it is unmounted.
@@ -137,7 +163,7 @@ export function DetailShell({ asset, summary, getCode, modal = false, children }
           ) : null}
           {getCode ? (
             <div data-hero-text className="mt-8">
-              <CopyCode code={getCode} />
+              <CopyCode code={getCode} onCopied={handleCopied} />
             </div>
           ) : null}
         </div>
@@ -147,9 +173,9 @@ export function DetailShell({ asset, summary, getCode, modal = false, children }
             <Phone
               slug={asset.slug}
               name={asset.name}
-              views={asset.views}
-              copies={asset.copies}
-              likes={asset.likes}
+              views={counts.views}
+              copies={counts.copies}
+              likes={counts.likes}
               onOpen={close}
             >
               {live ? <HeroPreview slug={asset.slug} /> : null}
@@ -158,7 +184,9 @@ export function DetailShell({ asset, summary, getCode, modal = false, children }
         </div>
       </section>
 
-        <section className="docs-carve mx-auto max-w-[1100px] px-6 pb-32">{children}</section>
+      <section className="mx-auto max-w-[1100px] px-6 pb-32">{children}</section>
+       {modal ? <SiteFooter /> : null}
+      <HeartPrompt open={asking} name={asset.name} onLater={later} onHeart={heart} />
     </div>
   );
 }
