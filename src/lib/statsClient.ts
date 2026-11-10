@@ -1,6 +1,7 @@
+import { refreshStats } from "./liveStats";
+
 /** What the browser sends when a visitor views, copies or hearts an asset.
- *  Each one calls a Supabase function of the same name (see the setup step).
- *  Without Supabase keys they do nothing on the server. */
+ *  Each one calls a Supabase function of the same name. */
 type Kind = "view" | "copy" | "heart";
 
 const RPC: Record<Kind, string> = {
@@ -17,10 +18,12 @@ async function send(kind: Kind, slug: string): Promise<void> {
   try {
     await fetch(`${url}/rest/v1/rpc/${RPC[kind]}`, {
       method: "POST",
-            headers: { apikey: key, "Content-Type": "application/json" },
+      headers: { apikey: key, "Content-Type": "application/json" },
       body: JSON.stringify({ asset_slug: slug }),
       keepalive: true,
     });
+    // Now the database has it: show its real numbers.
+    await refreshStats();
   } catch {}
 }
 
@@ -54,20 +57,9 @@ export function hasHearted(slug: string): boolean {
   }
 }
 
-/** Whether the heart box should appear: not hearted yet, and not asked this session. */
+/** Whether the heart box should appear: on every copy of an asset the visitor has not hearted. */
 export function shouldAskHeart(slug: string): boolean {
-  if (hasHearted(slug)) return false;
-  try {
-    return !sessionStorage.getItem(`cv-asked:${slug}`);
-  } catch {
-    return true;
-  }
-}
-
-export function markAsked(slug: string): void {
-  try {
-    sessionStorage.setItem(`cv-asked:${slug}`, "1");
-  } catch {}
+  return !hasHearted(slug);
 }
 
 /** One heart per asset per browser. Returns true when it counted. */

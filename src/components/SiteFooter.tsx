@@ -48,7 +48,11 @@ export function SiteFooter() {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(1440);
   const [runs, setRuns] = useState<Run[]>([]);
-  const [year] = useState(() => new Date().getFullYear());
+  // Read after the page opens: the current time cannot be read while it is prerendered.
+  const [year, setYear] = useState<number | null>(null);
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
   const layout = layoutFor(width);
 
   useEffect(() => {
@@ -83,8 +87,8 @@ export function SiteFooter() {
   useEffect(() => {
     measure();
     document.fonts?.ready.then(measure);
-  }, [measure, pal, width, layout.height, layout.px, layout.split]);
-  const textColor = hasGL ? "text-transparent" : "text-ink";
+  }, [measure, pal, width, year, layout.height, layout.px, layout.split]);
+    const textColor = hasGL ? "text-transparent" : "text-ink";
   const linkCls = `pointer-events-auto inline-block py-1 ${textColor} focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold`;
 
   return (
@@ -134,7 +138,7 @@ export function SiteFooter() {
                   </Link>
                 ))}
                 <span data-run="" suppressHydrationWarning className={`inline-block py-1 ${textColor}`}>
-                  © {year}
+                  © {year ?? ""}
                 </span>
               </nav>
               <p className={`m-0 ${textColor}`}>
@@ -167,3 +171,4 @@ export function SiteFooter() {
     </footer>
   );
 }
+

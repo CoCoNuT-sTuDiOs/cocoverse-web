@@ -1,20 +1,20 @@
 "use client";
 
-import { useGSAP } from "@gsap/react";
 import { Icon } from "@iconify/react";
 import gsap from "gsap";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Phone } from "@/components/phone/Phone";
 import type { Asset } from "@/lib/assets";
 import { phoneFlight } from "@/lib/flight";
-import { countCopy, countHeart, countView, markAsked, shouldAskHeart } from "@/lib/statsClient";
+import { liveStats, useLiveStats } from "@/lib/liveStats";
+import { countCopy, countHeart, countView, shouldAskHeart } from "@/lib/statsClient";
 import { CopyCode } from "./CopyCode";
 import { HeartPrompt } from "./HeartPrompt";
 import { HeroPreview } from "./HeroPreview";
 import { SiteFooter } from "../SiteFooter";
+import { hideLiveUntilSettled } from "@/lib/settleLive";
 
-gsap.registerPlugin(useGSAP);
 
 type Props = {
   asset: Asset;
@@ -31,29 +31,37 @@ export function DetailShell({ asset, summary, getCode, modal = false, children }
   const bg = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const tl = useRef<gsap.core.Timeline | null>(null);
-  const [counts, setCounts] = useState({ views: asset.views, copies: asset.copies, likes: asset.likes });
+  const closing = useRef(false);
+  const askTimer = useRef(0);
+  const base = { views: asset.views, copies: asset.copies, likes: asset.likes };
+  const counts = useLiveStats()[asset.slug] ?? base;
   const [asking, setAsking] = useState(false);
 
   // Opening the page counts as one view per visitor session.
   useEffect(() => {
-    if (countView(asset.slug)) setCounts((c) => ({ ...c, views: c.views + 1 }));
+        if (countView(asset.slug)) liveStats.bump(asset.slug, "views", base);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset.slug]);
 
   function handleCopied() {
-    if (countCopy(asset.slug)) setCounts((c) => ({ ...c, copies: c.copies + 1 }));
-    if (shouldAskHeart(asset.slug)) window.setTimeout(() => setAsking(true), 450);
+    if (countCopy(asset.slug)) liveStats.bump(asset.slug, "copies", base);
+    // Every copy of an asset you have not hearted asks again.
+    if (shouldAskHeart(asset.slug)) {
+      window.clearTimeout(askTimer.current);
+      askTimer.current = window.setTimeout(() => setAsking(true), 450);
+    }
   }
 
   function later() {
-    markAsked(asset.slug);
     setAsking(false);
   }
 
   function heart() {
-    markAsked(asset.slug);
     setAsking(false);
-    if (countHeart(asset.slug)) setCounts((c) => ({ ...c, likes: c.likes + 1 }));
+    if (countHeart(asset.slug)) liveStats.bump(asset.slug, "likes", base);
   }
+
+  useEffect(() => () => window.clearTimeout(askTimer.current), []);
   const [live, setLive] = useState(true);
 
   // The live 3D only runs while the phone is on screen. Scrolled away, it is unmounted.
@@ -68,49 +76,81 @@ export function DetailShell({ asset, summary, getCode, modal = false, children }
     return () => io.disconnect();
   }, [modal]);
 
+
+  // How far the entrance had got when this effect last stopped. Next can start the effect
+  // again after the page is already showing, and it must carry on from there, not replay.
+  const resumeAt = useRef(0);
+
   // The phone grows out of its place on the grid; the page fades in under it.
-  useGSAP(
-    () => {
-      const host = root.current;
-      const ph = stage.current;
-      if (!host || !ph) return;
-      const text = Array.from(host.querySelectorAll<HTMLElement>("[data-hero-text]"));
-            const flight = modal ? phoneFlight.get(asset.slug) : null;
-      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // The timeline is built outside any GSAP context on purpose: when the page goes
+  // away, nothing resets the phone's position while it is still on screen.
+  useLayoutEffect(() => {
+    closing.current = false;
+    const host = root.current;
+    const ph = stage.current;
+    if (!host || !ph) return;
 
-      if (!flight || reduced) {
+    // Start from the natural position, whatever an earlier run left behind.
+    gsap.set(ph, { clearProps: "transform" });
 
-      gsap.fromTo(text, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.08, ease: "power3.out" });
+    const text = Array.from(host.querySelectorAll<HTMLElement>("[data-hero-text]"));
+    const flight = modal ? phoneFlight.get(asset.slug) : null;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!flight || reduced) {
+      if (resumeAt.current > 0) {
+        gsap.set(text, { autoAlpha: 1, y: 0 });
         return;
       }
-
-      const to = ph.getBoundingClientRect();
-      const s = flight.rect.width / to.width;
-      const dx = flight.rect.left + flight.rect.width / 2 - (to.left + to.width / 2);
-      const dy = flight.rect.top + flight.rect.height / 2 - (to.top + to.height / 2);
-
-      const t = gsap.timeline();
-      t.set(ph, { x: dx, y: dy, scale: s, transformOrigin: "50% 50%" });
-      if (bg.current) {
-        t.fromTo(bg.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5, ease: "power2.out" }, 0.05);
-      }
-      t.to(ph, { x: 0, y: 0, scale: 1, duration: 1, ease: "expo.inOut" }, 0).fromTo(
+      resumeAt.current = 1;
+      const t = gsap.fromTo(
         text,
-        { autoAlpha: 0, y: 36 },
-        { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08, ease: "power3.out" },
-        0.55,
+        { autoAlpha: 0, y: 24 },
+        { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.08, ease: "power3.out" },
       );
-      tl.current = t;
-    },
-    { scope: root, dependencies: [] },
-  );
+      return () => {
+        t.kill();
+      };
+    }
+
+    const to = ph.getBoundingClientRect();
+    const s = flight.rect.width / to.width;
+    const dx = flight.rect.left + flight.rect.width / 2 - (to.left + to.width / 2);
+    const dy = flight.rect.top + flight.rect.height / 2 - (to.top + to.height / 2);
+
+    const t = gsap.timeline();
+    t.set(ph, { x: dx, y: dy, scale: s, transformOrigin: "50% 50%" });
+    if (bg.current) {
+      t.fromTo(bg.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5, ease: "power2.out" }, 0.05);
+    }
+    t.to(ph, { x: 0, y: 0, scale: 1, duration: 1, ease: "expo.inOut" }, 0).fromTo(
+      text,
+      { autoAlpha: 0, y: 36 },
+      { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08, ease: "power3.out" },
+      0.55,
+    );
+    // Carry on from where the last run stopped, instead of starting over.
+    if (resumeAt.current > 0) t.progress(resumeAt.current);
+    tl.current = t;
+
+    return () => {
+      resumeAt.current = Math.max(resumeAt.current, t.progress());
+      t.kill();
+      tl.current = null;
+    };
+  }, [asset.slug, modal]);
 
   function close() {
+    if (closing.current) return;
+    closing.current = true;
+
     if (!modal) {
       router.push("/");
       return;
     }
+
     const finish = () => {
+            hideLiveUntilSettled(stage.current);
       phoneFlight.clear();
       router.back();
     };
@@ -119,8 +159,17 @@ export function DetailShell({ asset, summary, getCode, modal = false, children }
       finish();
       return;
     }
-    if (root.current) root.current.scrollTop = 0;
-    t.eventCallback("onReverseComplete", finish).timeScale(1.5).reverse();
+
+    // If the page is scrolled, glide back to the top first, so the phone has a place to fly from.
+    const el = root.current;
+    const scrolled = !!el && el.scrollTop > 4;
+    if (el && scrolled) el.scrollTo({ top: 0, behavior: "smooth" });
+    window.setTimeout(
+      () => {
+        t.eventCallback("onReverseComplete", finish).timeScale(1.5).reverse();
+      },
+      scrolled ? 420 : 0,
+    );
   }
 
   const closeRef = useRef(close);
@@ -169,7 +218,7 @@ export function DetailShell({ asset, summary, getCode, modal = false, children }
         </div>
 
         <div className="order-1 flex justify-center md:order-2">
-          <div ref={stage} style={{ width: "min(340px, 44svh)" }}>
+          <div ref={stage} style={{ width: "min(340px, 44svh)", willChange: "transform" }}>
             <Phone
               slug={asset.slug}
               name={asset.name}

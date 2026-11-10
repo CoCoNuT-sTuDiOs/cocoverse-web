@@ -74,7 +74,6 @@ html {
 }
 
 body {
-  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-syne), system-ui, sans-serif;
   font-size: 1.0625rem;
@@ -130,6 +129,13 @@ pre {
 /* While the details page has this phone's live view, the grid phone steps aside. */
 [data-cell][data-flying] .cvp {
   visibility: hidden;
+}
+
+
+/* The phone that was opened never lifts or settles, so the grid phone sits exactly where the details page lands. */
+[data-cell][data-chosen] .cvp-body {
+  transition: none !important;
+  transform: none !important;
 }
 
 /* The phone lifts a little when you point at it. */
@@ -733,4 +739,32 @@ html[data-docked] [data-hdr] {
 
 .docs-carve .paper code {
   font-weight: 400;
+}
+
+/* Once the fur is carrying the hero's words, the real text steps aside. It stays in the page. */
+[data-fur-hero="on"] [data-hero-copy] {
+  color: transparent;
+}
+
+[data-fur-hero="on"] [data-word] {
+  background: none;
+}
+
+/* The fur reacts to the pointer anywhere on the hero, and the hero has nothing to click. */
+[data-fur-hero="on"] [data-hero-content] {
+  pointer-events: none;
+}
+
+/* The header sits on the fur, so it loses any background of its own. */
+html[data-fur-top] header {
+  background: transparent !important;
+}
+
+/* Phones keep the heavier Syne lettering. */
+@media (max-width: 767px) {
+  [data-fur-hero="on"] [data-hero-copy] {
+    font-family: var(--font-syne), system-ui, sans-serif;
+    font-weight: 800;
+    font-variation-settings: normal;
+  }
 }

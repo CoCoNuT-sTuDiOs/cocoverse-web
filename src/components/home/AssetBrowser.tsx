@@ -10,6 +10,8 @@ import { Phone } from "@/components/phone/Phone";
 import { activePhone } from "@/lib/activePhone";
 import { type Asset, type SortKey, SORTS, sortAssets } from "@/lib/assets";
 import { phoneFlight } from "@/lib/flight";
+import { refreshStats, useLiveStats } from "@/lib/liveStats";
+
 
 gsap.registerPlugin(useGSAP);
 
@@ -37,7 +39,12 @@ export function AssetBrowser({ assets }: { assets: Asset[] }) {
   }, []);
 
   const perPage = small ? PER_PAGE_MOBILE : PER_PAGE_DESKTOP;
-  const sorted = useMemo(() => sortAssets(assets, sort), [assets, sort]);
+    const live = useLiveStats();
+  const withLive = useMemo(
+    () => assets.map((a) => (live[a.slug] ? { ...a, ...live[a.slug] } : a)),
+    [assets, live],
+  );
+  const sorted = useMemo(() => sortAssets(withLive, sort), [withLive, sort]);
   const pages = Math.max(1, Math.ceil(sorted.length / perPage));
   const current = Math.min(page, pages);
   const visible = sorted.slice((current - 1) * perPage, current * perPage);
@@ -62,8 +69,11 @@ export function AssetBrowser({ assets }: { assets: Asset[] }) {
     // Remember where the phone is, so the details page can grow out of it.
     const body = document.querySelector<HTMLElement>(`[data-cell] [data-asset-slug="${slug}"] .cvp-body`);
     const r = body?.getBoundingClientRect();
+    // A phone you are pointing at is lifted 8px. Measure it where it rests, so the details
+    // page grows out of, and shrinks back into, the exact same place.
+    const lift = body ? new DOMMatrix(getComputedStyle(body).transform).m42 : 0;
     if (r) {
-      phoneFlight.set({ slug, rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+      phoneFlight.set({ slug, rect: { left: r.left, top: r.top - lift, width: r.width, height: r.height } });
     }
     setChosen(slug);
     activePhone.set(slug);
@@ -77,12 +87,32 @@ export function AssetBrowser({ assets }: { assets: Asset[] }) {
   function release() {
     window.clearTimeout(pushTimer.current);
     const el = veil.current;
-  if (!el) {
+    if (!el) {
       setChosen(null);
       return;
     }
     gsap.to(el, { autoAlpha: 0, duration: 0.35, ease: "power2.in", onComplete: () => setChosen(null) });
   }
+
+  // The real counts, read from the database when the home page opens and every time
+  // you come back to it from a details page...
+  useEffect(() => {
+
+    if (pathname === "/") void refreshStats();
+  }, [pathname]);
+
+  // ...and when you come back to the browser tab.
+  useEffect(() => {
+    const onShow = () => {
+      if (document.visibilityState === "visible") void refreshStats();
+    };
+    document.addEventListener("visibilitychange", onShow);
+    window.addEventListener("focus", onShow);
+    return () => {
+      document.removeEventListener("visibilitychange", onShow);
+      window.removeEventListener("focus", onShow);
+    };
+  }, []);
 
   // Back on the home page after a details page: let the blur go.
   useEffect(() => {

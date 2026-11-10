@@ -1,9 +1,9 @@
 /* eslint-disable */
-// Mohair Capsule — Originkit
 
 "use client"
 
 import Link from "next/link"
+import { drawArt, type Art } from "../../lib/furArt"
 import { addPropertyControls, ControlType } from "./framerShim"
 import { useEffect, useRef, useState } from "react"
 import type { CSSProperties, ReactNode } from "react"
@@ -124,7 +124,18 @@ export interface Run {
     x: number
     y: number
     underline?: boolean
+    /** Font size in px for this piece. Falls back to the Font control's size. */
+    size?: number
+    /** Font weight for this piece. Falls back to the Font control's weight. */
+    weight?: number
+    /** Font family for this piece, as the page computes it. Falls back to the Font control's family. */
+    family?: string
+    /** Which dye colour: 0 is Text Color, 1 to 3 are the colours in inks. */
+    tone?: 0 | 1 | 2 | 3
 }
+
+/** Canvas colours that carry the tone in the label texture: black, red, green, blue. */
+export const TONES = ["#000", "#f00", "#0f0", "#00f"]
 
 export interface Placement {
     x: number
@@ -184,12 +195,21 @@ export interface MohairCapsuleProps {
     sway?: number
     /** Colour of the tips and glints. Leave out to derive it from the fur colour, as the original does. */
     tipColor?: string
+    /** Dye colours for tones 1, 2 and 3. Tone 0 is Text Color. */
+    inks?: string[]
+    /** A drawing dyed into the fur, placed in CSS px from the centre of the button. */
+    art?: Art
+    /** Scales how long the hairs grow without changing the button's size. */
+    hairScale?: number
+
     /** Draw in CSS px instead of scaling the 1200×800 frame: for a footer or a button in a page. */
     fixed?: boolean
     /** No link and no button: the fur is only decoration, and its children stay clickable. */
     decorative?: boolean
     /** Pieces of text dyed into the fur at exact positions. Used instead of Label when given. */
     runs?: Run[]
+    /** Room round the button for its swell and hairs, in button heights. Default 1. A smaller canvas is cheaper. */
+    bleed?: number
     children?: ReactNode
     placement?: Partial<Placement>
     response?: Partial<Response>
@@ -376,6 +396,9 @@ uniform float uPhase;    // sway clock, rad
 uniform vec3 uFur;       // fur colour, linear
 uniform vec3 uTip;       // tip and glint colour, linear
 uniform vec3 uInk;
+uniform vec3 uInk2;
+uniform vec3 uInk3;
+uniform vec3 uInk4;
 uniform float uInkOn;
 uniform vec3 uLight;
 uniform vec4 uLock;      // lock cell, lock length (units), swirl (rad), strand contrast
@@ -555,12 +578,19 @@ Lock evalLock(ivec2 cell, vec2 q, float sdPix) {
     return k;
 }
 
-vec3 lockAlbedo(Lock k, float ink) {
+// The dye colour a label pixel stands for: its red, green and blue are weights of tones 1 to 3.
+vec3 inkOf(vec3 t) {
+    float w0 = max(0.0, 1.0 - t.r - t.g - t.b);
+    vec3 s = uInk * w0 + uInk2 * t.r + uInk3 * t.g + uInk4 * t.b;
+    return s / max(w0 + t.r + t.g + t.b, 1e-4);
+}
+
+vec3 lockAlbedo(Lock k, float ink, vec3 inkCol) {
     vec3 a = uFur * (0.86 + 0.28 * k.h.x);
     // The odd lighter lock, as in the reference.
     a = mix(a, uTip * 0.75, 0.22 * smoothstep(0.82, 1.0, k.h.y));
-    return mix(a, uInk, ink);
-}
+    return mix(a, inkCol, ink);
+    }
 
 // Hair lightens toward its tips, a little desaturated, as the reference's
 // strands do: (59,93,164) tips over a (31,67,143) body.
@@ -724,19 +754,22 @@ void main() {
     // Soft and only a little darker than the tufts, as plush is; brighter
     // toward the rim, where the swept tufts part, so no line traces the edge.
     float rimLift = smoothstep(-0.14, 0.0, sd);
-        float inkU = uInkOn > 0.5 ? texture(uLabel, (q + F0 * (us - 0.5) * uFray * uUcss) / (uHalf * 2.0) + 0.5).a : 0.0;
-    vec3 under = mix(uFur * mix(0.55, 0.8, rimLift), uInk * 0.8, inkU) * (0.55 + 0.5 * bodyDiff) * illum * (0.8 + 0.4 * us);
+    vec4 lu = uInkOn > 0.5 ? texture(uLabel, (q + F0 * (us - 0.5) * uFray * uUcss) / (uHalf * 2.0) + 0.5) : vec4(0.0);
+    float inkU = lu.a;
+    vec3 under = mix(uFur * mix(0.55, 0.8, rimLift), inkOf(lu.rgb) * 0.8, inkU) * (0.55 + 0.5 * bodyDiff) * illum * (0.8 + 0.4 * us);
     vec4 acc = vec4(under * body, body);
     // Letters made of the fur: each hair carries the dye a little up or down
     // its own length, so a letter's edge is hairs crossing it both ways.
     if (best2.cov > 0.0) {
-        float i2 = uInkOn > 0.5 ? texture(uLabel, (q - best2.d * (best2.sid - 0.5) * 2.0 * uFray * uUcss) / (uHalf * 2.0) + 0.5).a : 0.0;
-       vec3 c2 = shadeLock(best2, Nb, lockAlbedo(best2, i2), illum, i2);
-        acc = vec4(c2 * best2.cov, best2.cov) + acc * (1.0 - best2.cov);
+        vec4 l2 = uInkOn > 0.5 ? texture(uLabel, (q - best2.d * (best2.sid - 0.5) * 2.0 * uFray * uUcss) / (uHalf * 2.0) + 0.5) : vec4(0.0);
+        float i2 = l2.a;
+        vec3 c2 = shadeLock(best2, Nb, lockAlbedo(best2, i2, inkOf(l2.rgb)), illum, i2);
+          acc = vec4(c2 * best2.cov, best2.cov) + acc * (1.0 - best2.cov);
     }
     if (best1.cov > 0.0) {
-        float i1 = uInkOn > 0.5 ? texture(uLabel, (q - best1.d * (best1.sid - 0.5) * 2.0 * uFray * uUcss) / (uHalf * 2.0) + 0.5).a : 0.0;
-    vec3 c1 = shadeLock(best1, Nb, lockAlbedo(best1, i1), illum, i1);
+        vec4 l1 = uInkOn > 0.5 ? texture(uLabel, (q - best1.d * (best1.sid - 0.5) * 2.0 * uFray * uUcss) / (uHalf * 2.0) + 0.5) : vec4(0.0);
+        float i1 = l1.a;
+        vec3 c1 = shadeLock(best1, Nb, lockAlbedo(best1, i1, inkOf(l1.rgb)), illum, i1);
         acc = vec4(c1 * best1.cov, best1.cov) + acc * (1.0 - best1.cov);
     }
     acc.rgb *= 1.0 - 0.4 * letterShade * (1.0 - ink);
@@ -799,9 +832,9 @@ interface Lattice {
     key: string
 }
 
-function makeLattice(hw: number, r: number): Lattice {
-    const spanX = 2 * (hw + MARGIN)
-    const spanY = 2 * (0.5 + MARGIN)
+function makeLattice(hw: number, r: number, margin: number = MARGIN): Lattice {
+    const spanX = 2 * (hw + margin)
+    const spanY = 2 * (0.5 + margin)
     const nx = clamp(Math.round(spanX / GRID_PITCH) + 1, 8, 160)
     const ny = clamp(Math.round(spanY / GRID_PITCH) + 1, 8, 96)
     const n = nx * ny
@@ -874,9 +907,13 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
         furLength = DEFAULTS.furLength,
         sway = DEFAULTS.sway,
         tipColor,
+        inks,
+        art,
+        hairScale,
         fixed = false,
         decorative = false,
         runs,
+        bleed,
         children,
         placement,
         response,
@@ -905,11 +942,11 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
     const rRef = clamp(radius, 0, Math.min(bwRef, bhRef) / 2)
     const bw = bwRef * u
     const bh = bhRef * u
-    const m = MARGIN * bh
+    const m = (bleed ?? MARGIN) * bh
     const cw = bw + 2 * m
     const ch = bh + 2 * m
 
-    const cfg = { bwRef, bhRef, rRef, furColor, furLength, textColor, lines, font, pl, rs, adv, sway, tipColor, fixed, decorative, runs }
+       const cfg = { bwRef, bhRef, rRef, furColor, furLength, textColor, lines, font, pl, rs, adv, sway, tipColor, inks, art, hairScale, fixed, decorative, runs, bleed }
     const live = useRef({ cfg, key: "", w: size.w, h: size.h })
     const key = JSON.stringify(cfg)
     live.current.cfg = cfg
@@ -952,6 +989,7 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
             fur: [0, 0, 0] as number[],
             tip: [0, 0, 0] as number[],
             ink: [0, 0, 0] as number[],
+            inks: [[0, 0, 0], [0, 0, 0], [0, 0, 0]] as number[][],
             quality: 1,
             phase: 0,
             act: 0,
@@ -1069,7 +1107,7 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
             g.useProgram(prog)
             const names = [
                 "uCanvas", "uOrigin", "uUpp", "uUcss", "uHalf", "uRad", "uGrid", "uDeform", "uInflate", "uScale", "uPhase", "uActive",
-                                "uFur", "uTip", "uInk", "uInkOn", "uLight", "uLock", "uLook", "uGround", "uFray",
+                "uFur", "uTip", "uInk", "uInk2", "uInk3", "uInk4", "uInkOn", "uLight", "uLock", "uLook", "uGround", "uFray",
                 "uGridTex", "uBrush", "uNoise", "uLabel", "uGridGrad",
             ]
             for (const n of names) loc[n] = g.getUniformLocation(prog, n)
@@ -1115,7 +1153,7 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
         const drawLabel = (bwPx: number, bhPx: number, scale: number) => {
             const g = gl!
             const c = live.current.cfg
-                        const lk = JSON.stringify([c.lines, c.runs, c.font, Math.round(bwPx * scale), Math.round(bhPx * scale), fontTick])
+            const lk = JSON.stringify([c.lines, c.runs, c.art, c.font, Math.round(bwPx * scale), Math.round(bhPx * scale), fontTick])
             if (lk === state.labelKey) return
             if (!state.labelKey || !state.labelKey.includes(JSON.stringify(c.font ?? null))) ensureFont(c.font, onFontReady)
             state.labelKey = lk
@@ -1131,16 +1169,17 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
                 // capped in width does not stretch the letters.
                 const kx = W / bwPx
                 const ky = H / bhPx
-                const px = labelSizeRef(c.font) * (bhPx / c.bhRef)
+                const basePx = labelSizeRef(c.font) * (bhPx / c.bhRef)
                 ctx.save()
                 ctx.translate(W / 2, H / 2)
                 ctx.scale(kx, ky)
-                ctx.font = fontCss(c.font, px)
-                ctx.fillStyle = "#fff"
                 ctx.textAlign = "center"
                 ctx.textBaseline = "middle"
                 for (const r of c.runs) {
-                    ctx.fillText(r.text, r.x, r.y)
+                    ctx.fillStyle = TONES[r.tone ?? 0]
+                    const px = r.size ?? basePx
+                    ctx.font = fontCss({ ...c.font, fontFamily: r.family ?? c.font?.fontFamily, fontWeight: r.weight ?? c.font?.fontWeight }, px)                    
+                ctx.fillText(r.text, r.x, r.y)
                     if (r.underline) {
                         const tw = ctx.measureText(r.text).width
                         ctx.fillRect(r.x - tw / 2, r.y + px * 0.42, tw, Math.max(1.5, px * 0.08))
@@ -1148,7 +1187,16 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
                 }
                 ctx.restore()
             }
+            if (c.art) {
+                // A drawing, dyed in as it is: its colours are the tones.
+                ctx.save()
+                ctx.translate(W / 2 + c.art.x * (W / bwPx), H / 2 + c.art.y * (H / bhPx))
+                ctx.scale(W / bwPx, H / bhPx)
+                drawArt(ctx, c.art)
+                ctx.restore()
+            }
             const n = c.runs && c.runs.length ? 0 : c.lines.length
+
             if (n) {
             // The Font control's size, scaled with the frame like the button.
                 let fs = Math.min(labelSizeRef(c.font) * (H / c.bhRef), (H * TEXT_MAX_H) / (n * LINE_H))
@@ -1502,7 +1550,7 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
             const bwPx = c.bwRef * uu
             const hw = c.bwRef / c.bhRef / 2
             const rr = c.rRef / c.bhRef
-            const mPx = MARGIN * bhPx
+            const mPx = (c.bleed ?? MARGIN) * bhPx
             const cssW = bwPx + 2 * mPx
             const cssH = bhPx + 2 * mPx
 
@@ -1618,9 +1666,10 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
             }
 
             // Lattice geometry follows the button's proportions.
-            const lk = `${hw.toFixed(4)}|${rr.toFixed(4)}`
+            const mg = c.bleed ?? MARGIN
+            const lk = `${hw.toFixed(4)}|${rr.toFixed(4)}|${mg}`
             if (!lattice || lattice.key !== lk) {
-                lattice = makeLattice(hw, rr)
+                lattice = makeLattice(hw, rr, mg)
                 lattice.key = lk
             }
             const L = lattice
@@ -1688,13 +1737,14 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
             g.viewport(0, 0, pw, ph)
 
             // ------------------------------------------------ colours
-            const ck = `${c.furColor}|${c.textColor}|${c.tipColor ?? ""}`
+            const ck = `${c.furColor}|${c.textColor}|${c.tipColor ?? ""}|${(c.inks ?? []).join(",")}`
             if (ck !== state.colorKey) {
                 state.colorKey = ck
                 const f = resolveRGB(root, c.furColor).map(srgbToLin)
                 const t = resolveRGB(root, c.textColor).map(srgbToLin)
                 state.fur = f
                 state.ink = t
+                state.inks = [0, 1, 2].map((i) => (c.inks && c.inks[i] ? resolveRGB(root, c.inks[i]).map(srgbToLin) : t))
                 if (c.tipColor) {
                     // The page's own tip colour.
                     state.tip = resolveRGB(root, c.tipColor).map(srgbToLin)
@@ -1795,12 +1845,15 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
             setU("uFur", state.fur[0], state.fur[1], state.fur[2])
             setU("uTip", state.tip[0], state.tip[1], state.tip[2])
             setU("uInk", state.ink[0], state.ink[1], state.ink[2])
-            setU("uInkOn", c.lines.length || c.runs?.length ? 1 : 0)
+            setU("uInk2", state.inks[0][0], state.inks[0][1], state.inks[0][2])
+            setU("uInk3", state.inks[1][0], state.inks[1][1], state.inks[1][2])
+            setU("uInk4", state.inks[2][0], state.inks[2][1], state.inks[2][2])
+            setU("uInkOn", c.lines.length || c.runs?.length || c.art ? 1 : 0)
             // The light stays put in the frame when the button turns.
             const la = ((a.lightAngle - pl0.angle) * Math.PI) / 180
             const le = (clamp(a.lightHeight, 1, 89) * Math.PI) / 180
             setU("uLight", Math.sin(la) * Math.cos(le), -Math.cos(la) * Math.cos(le), Math.sin(le))
-            const lockLen = LOCK_LEN0 + LOCK_LEN1 * clamp(c.furLength, 1, 10)
+            const lockLen = (LOCK_LEN0 + LOCK_LEN1 * clamp(c.furLength, 1, 10)) * (c.hairScale ?? 1)
             // Long fur grows in proportionally broader clumps: a lock stays
             // at most ~3 cells long, the proportion the shading and the
             // gather were built for, so long locks never break into blocks.
@@ -1808,8 +1861,8 @@ export default function MohairCapsule(props: MohairCapsuleProps) {
             setU("uLock", lockCell, lockLen, (a.swirl / 100) * SWIRL_AMP, Math.max(0, a.strands) / 100)
             setU("uLook", a.sheen / 100, a.tipLight / 100, Math.max(0, a.flyaways) / 100, (SWAY_REST + SWAY_ACTIVE * state.act) * (reduced ? 0 : Math.min(1, clamp(c.sway, 0, 10) / 5)))
                         setU("uGround", a.shadow / 100, a.glow / 100)
-            setU("uFray", Math.min(LETTER_FRAY, 0.07 * labelSizeRef(c.font) * uu))
-
+            const smallest = c.runs && c.runs.length ? Math.min(...c.runs.map((r) => r.size ?? labelSizeRef(c.font) * uu)) : labelSizeRef(c.font) * uu
+            setU("uFray", Math.min(LETTER_FRAY, 0.07 * smallest))
             g.drawArrays(g.TRIANGLES, 0, 3)
             drawnFrames++
 

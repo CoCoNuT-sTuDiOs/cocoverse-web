@@ -1157,6 +1157,289 @@ class Demo extends StatelessWidget {
     ],
   },
 
+  timeline: {
+    summary:
+      "A stack of photos that flip over one after another, tile by tile, like a split-flap board. It fills the space it is given, so you choose how big it shows by sizing its parent: full screen, half a screen or a small card.",
+    useCases: [
+      "A full-screen photo story on a splash or welcome screen",
+      "A portfolio, product or travel slideshow with some drama",
+      "A card or banner that shows several photos in one place",
+    ],
+    getCode: `SizedBox(
+  height: 240,
+  child: Timeline(
+    images: [
+      AssetImage('assets/a.jpg'),
+      AssetImage('assets/b.jpg'),
+    ],
+  ),
+)`,
+    params: [
+      { name: "images", type: "List<ImageProvider>", def: "[]", desc: "The photos, in the order they show. Any number. Empty shows placeholders." },
+      { name: "placeholderCount", type: "int", def: "3", desc: "How many placeholder slides show when images is empty." },
+      { name: "placeholderLabel", type: "String", def: "'Your photo here'", desc: "The words on each placeholder slide." },
+      { name: "focusY", type: "double", def: "50.0", desc: "Where a photo that is taller than the box is anchored, from 0 (top) to 100 (bottom). 50 centres it." },
+      { name: "tiles", type: "int", def: "50", desc: "Tiles across the box, 4 to 120. The tiles are square, so the number down follows from the shape of the box. Lower quality settings use fewer." },
+      { name: "angle", type: "double", def: "77.0", desc: "Direction of the sweep in degrees. 0 sweeps left to right, 90 top to bottom." },
+      { name: "flip", type: "double", def: "50.0", desc: "How much of the transition each tile spends flipping, from 5 to 100 percent. The rest is the delay between the first tile and the last." },
+      { name: "duration", type: "Duration", def: "1200 milliseconds", desc: "How long one photo takes to flip in." },
+      { name: "hold", type: "Duration", def: "1 second", desc: "How long a photo stays once it has landed." },
+      { name: "curve", type: "Curve", def: "linear", desc: "Shapes the sweep. Linear is an even wave." },
+      { name: "loop", type: "bool", def: "true", desc: "Whether it goes back to the first photo after the last. False stops on the last one." },
+      { name: "maxImageSize", type: "int", def: "2048", desc: "The longest side, in pixels, a photo is decoded at. Larger photos are shrunk as they load, which saves a lot of memory." },
+      PAUSED,
+      quality("high", "Level of detail. Lower settings draw fewer tiles (up to 1200 on low, 2200 on medium and 3600 on high)."),
+      { name: "background", type: "Color?", def: "null", desc: "Fill behind the photos. Null means transparent." },
+      { name: "controller", type: "EffectController?", def: "null", desc: "Optional control. reset() starts again from the first photo." },
+      SEMANTIC,
+    ],
+    enums: [QUALITY_ENUM],
+    controller: {
+      name: "EffectController",
+      desc: "Create one, pass it as controller, and dispose it when you are done.",
+      methods: [
+        { name: "pause()", desc: "Freezes the animation." },
+        { name: "resume()", desc: "Continues the animation after pause()." },
+        { name: "reset()", desc: "Starts again from the first photo." },
+      ],
+    },
+    example: `import 'package:flutter/material.dart';
+import 'package:cocoverse_ui/cocoverse_ui.dart';
+
+// The Timeline fills its parent, so inside a Scaffold body it is full screen.
+class Demo extends StatelessWidget {
+  const Demo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Timeline(
+        images: [
+          AssetImage('assets/photos/one.jpg'),
+          AssetImage('assets/photos/two.jpg'),
+          AssetImage('assets/photos/three.jpg'),
+        ],
+        angle: 45,
+        flip: 60,
+      ),
+    );
+  }
+}`,
+    notes: [
+      "List your photos under flutter: assets: in pubspec.yaml, for example - assets/photos/.",
+      "It fills the space its parent gives it. Put it in a SizedBox for a card or banner, or give it the whole screen.",
+      "It needs at least two photos to flip. With one photo it simply shows it. With no photos it shows placeholder slides, so you can see how it behaves first.",
+      "Each photo sweeps in the opposite direction to the one before it.",
+      "If the device is set to reduce motion, it shows the first photo, still.",
+    ],
+  },
+
+  hourglass: {
+    summary:
+      "An hourglass of glowing rings: a stack of fat gradient rings pinched to a small ring at the waist and flaring into two great bowls that run off the frame. Made to sit behind your app.",
+    useCases: [
+      "A glowing animated background behind a screen",
+      "A hero backdrop for a landing page, softened with focus",
+      "A calm full-screen visual for onboarding or a splash screen",
+    ],
+    getCode: `Stack(
+  children: [
+    const Positioned.fill(child: Hourglass(focus: 40)),
+    SafeArea(child: YourScreen()),
+  ],
+)`,
+    params: [
+      { name: "colors", type: "List<Color>?", def: "original colours", desc: "One colour per ring, from the top of the stack down. Each colour becomes a whole ring, with its highlights and shades worked out from it. Fewer colours than rings repeat down the stack. Null uses the original colours." },
+      { name: "rings", type: "List<HourglassRing>?", def: "null", desc: "Full control: every ring's seven gradient colours. Wins over colors." },
+      { name: "background", type: "Color", def: "0xFF000000", desc: "What is behind the rings. Black by default. Use a clear colour for none." },
+      { name: "focus", type: "double", def: "100.0", desc: "How sharp it is, from 0 to 100. 100 is perfectly sharp. Lower values blur it more, for sitting behind your content." },
+      { name: "spacing", type: "double", def: "100.0", desc: "Vertical spread of the stack, from 40 to 200 percent. 100 is the original." },
+      { name: "flare", type: "double", def: "100.0", desc: "How fast the rings grow away from the waist, from 30 to 160 percent. Low values turn the hourglass into a column." },
+      { name: "thickness", type: "double", def: "100.0", desc: "Thickness of every tube, from 30 to 200 percent." },
+      { name: "scale", type: "double", def: "100.0", desc: "Size of the stack in the frame, from 40 to 160 percent. 100 is the original framing. Below it more rings come into view." },
+      { name: "offsetX", type: "double", def: "0.0", desc: "Moves the stack across the frame, as a percentage of its width, from -50 to 50. Positive is right." },
+      { name: "offsetY", type: "double", def: "0.0", desc: "Moves the stack down the frame, as a percentage of its height, from -50 to 50. Positive is down." },
+      { name: "angle", type: "double", def: "0.0", desc: "Turns the stack in the picture, in degrees, from -180 to 180. Positive is clockwise." },
+      { name: "tilt", type: "double", def: "0.0", desc: "Leans the stack about the horizontal axis, in degrees, from -40 to 40." },
+      { name: "motion", type: "HourglassMotion", def: "flowUp", desc: "How the rings move." },
+      { name: "speed", type: "double", def: "5.0", desc: "Pace of the breathing or the stream, from 0 to 10. 5 is a ring every 8 seconds in the flow." },
+      { name: "entrance", type: "bool", def: "true", desc: "Whether the rings bloom out from the waist when it first appears." },
+      { name: "entranceDelay", type: "double", def: "0.0", desc: "Seconds to wait before the bloom." },
+      { name: "entranceStagger", type: "double", def: "5.0", desc: "Gap between one ring and the next as the bloom travels outward, from 0 to 10." },
+      PAUSED,
+      quality("high", "Level of detail. Lower settings build the rings from fewer pieces."),
+      { name: "controller", type: "EffectController?", def: "null", desc: "Optional control. reset() plays the bloom again." },
+      SEMANTIC,
+    ],
+    paramGroups: [
+      {
+        name: "HourglassRing",
+        desc: "One ring's gradient round its tube, as seven colours. Pass a list of these as rings for full control. HourglassRing.fromColor(color) makes a whole ring from one colour, with the highlights and shades worked out from it.",
+        params: [
+          { name: "crest", type: "Color", desc: "The pale shoulder on the side facing away from the waist." },
+          { name: "body", type: "Color", desc: "The ring's own colour, at its outer equator." },
+          { name: "shade", type: "Color", desc: "The deep band on the shoulder facing the waist." },
+          { name: "glow", type: "Color", desc: "The second light, on the face turned toward the waist." },
+          { name: "halo", type: "Color", desc: "Round the lip of the hole." },
+          { name: "core", type: "Color", desc: "The inside wall of the hole." },
+          { name: "depth", type: "Color", desc: "Deep in the hole." },
+          { name: "turn", type: "double", def: "0", desc: "Turns this ring's gradient round its tube, in degrees." },
+        ],
+      },
+    ],
+    enums: [
+      {
+        name: "HourglassMotion",
+        desc: "How the rings move.",
+        values: [
+          { name: "breathe", desc: "The light rolls round each ring and the rings swell, in a slow wave down the stack." },
+          { name: "flowUp", desc: "The rings stream upward through the waist." },
+          { name: "flowDown", desc: "The rings stream downward through the waist." },
+          { name: "still", desc: "Nothing moves. The picture is drawn once and kept." },
+        ],
+      },
+      QUALITY_ENUM,
+    ],
+    controller: {
+      name: "EffectController",
+      desc: "Create one, pass it as controller, and dispose it when you are done.",
+      methods: [
+        { name: "pause()", desc: "Freezes the animation." },
+        { name: "resume()", desc: "Continues the animation after pause()." },
+        { name: "reset()", desc: "Plays the bloom again." },
+      ],
+    },
+    example: `import 'package:flutter/material.dart';
+import 'package:cocoverse_ui/cocoverse_ui.dart';
+
+class Demo extends StatelessWidget {
+  const Demo({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        const Positioned.fill(
+          child: Hourglass(
+            focus: 40,
+            colors: [
+              Color(0xFFFF9F1C),
+              Color(0xFF34D1BF),
+              Color(0xFF7B5CFF),
+              Color(0xFFF03CB4),
+            ],
+          ),
+        ),
+        const SafeArea(
+          child: Center(
+            child: Text(
+              'Hello',
+              style: TextStyle(color: Colors.white, fontSize: 32),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}`,
+    notes: [
+      "It fills the space it is given, running the funnel from top to bottom whatever the width, so on a phone and on a desktop it just fits.",
+      "It ignores touches, so your content on top of it stays tappable.",
+      "With motion set to still, the picture is drawn once and kept, which costs almost nothing.",
+      "If the device is set to reduce motion, it stays still and skips the bloom.",
+    ],
+  },
+
+  halo: {
+    summary:
+      "A set of rings turning inside each other like a gyroscope. Use it as a loading indicator, as a progress ring, or as a frame around a logo or an avatar. Drag it to turn the whole thing and it keeps turning after you let go. Pointing at it speeds the rings up.",
+    useCases: [
+      "A loading indicator with real depth",
+      "A progress ring that lights its rings one at a time",
+      "A frame around a logo, an avatar or a percentage",
+    ],
+    getCode: `SizedBox(
+  width: 96,
+  height: 96,
+  child: Halo(semanticLabel: 'Loading'),
+)`,
+    params: [
+      { name: "finish", type: "HaloFinish", def: "metallic", desc: "Chrome or cartoon." },
+      { name: "tint", type: "Color", def: "0xFFEDEDED", desc: "The colour the chrome is tinted with, for the metallic finish. Silver by default. Gold or copper work well, and the glints stay white." },
+      { name: "colors", type: "List<Color>?", def: "candy colours", desc: "The colours the rings take, outermost first, for the cartoon finish. They repeat if there are fewer than rings. Null uses the candy colours." },
+      { name: "ink", type: "Color", def: "0xFF1B140F", desc: "The colour of the outline in the cartoon finish." },
+      { name: "outline", type: "double", def: "0.3", desc: "How thick the outline is in the cartoon finish, from 0 to 1." },
+      { name: "rings", type: "int", def: "6", desc: "How many rings, 1 to 6. The first is the outermost." },
+      { name: "thickness", type: "double", def: "5.0", desc: "How thick each ring's tube is, from 1 to 20." },
+      { name: "innerRadius", type: "double", def: "40.0", desc: "Size of the innermost ring, from 20 to 200." },
+      { name: "gap", type: "double", def: "0.0", desc: "Space between neighbouring rings, from 0 to 50." },
+      { name: "spin", type: "double", def: "2.0", desc: "How fast the rings turn, from 1 to 20. Use paused to stop them." },
+      { name: "hoverBoost", type: "double", def: "10.0", desc: "How much pointing at it speeds the rings up, from 0 to 10. 0 turns it off." },
+      { name: "dragSensitivity", type: "double", def: "3.0", desc: "How far a drag turns it, from 0 to 10. 0 turns dragging off." },
+      { name: "sizePercent", type: "double", def: "104.0", desc: "How much of the box the rings fill, from 20 to 200 percent." },
+      { name: "progress", type: "double?", def: "null", desc: "Progress from 0 to 1. Null means an endless loader with every ring lit. A number lights the rings one at a time from the innermost out, and the rings not yet lit stay dark." },
+      { name: "child", type: "Widget?", def: "null", desc: "Anything to show in the middle, such as a percentage, a logo or a photo. It is decorative and sits behind the rings." },
+      interactive("Whether dragging and pointing do anything. Turn it off when the halo sits inside something that scrolls."),
+      PAUSED,
+      quality("high", "Level of detail. Lower settings build the rings from fewer pieces."),
+      BACKGROUND,
+      { name: "controller", type: "EffectController?", def: "null", desc: "Optional control. reset() puts the rings back to their starting pose." },
+      { name: "semanticLabel", type: "String?", def: "null", desc: "Description for screen readers. Null marks the halo as decorative. For a loader, use something like 'Loading'." },
+    ],
+    enums: [
+      {
+        name: "HaloFinish",
+        desc: "How the rings are painted.",
+        values: [
+          { name: "metallic", desc: "Polished chrome that reflects a studio. Coloured by tint." },
+          { name: "cartoon", desc: "Flat colour bands with an ink outline, like a drawing." },
+        ],
+      },
+      QUALITY_ENUM,
+    ],
+    controller: {
+      name: "EffectController",
+      desc: "Create one, pass it as controller, and dispose it when you are done.",
+      methods: [
+        { name: "pause()", desc: "Freezes the animation." },
+        { name: "resume()", desc: "Continues the animation after pause()." },
+        { name: "reset()", desc: "Puts the rings back to their starting pose." },
+      ],
+    },
+    example: `import 'package:flutter/material.dart';
+import 'package:cocoverse_ui/cocoverse_ui.dart';
+
+class Demo extends StatelessWidget {
+  const Demo({super.key, required this.progress});
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: 200,
+        height: 200,
+        child: Halo(
+          progress: progress,
+          tint: const Color(0xFFE8B64A),
+          semanticLabel: 'Uploading',
+          child: Text(
+            '0 percent',
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+          ),
+        ),
+      ),
+    );
+  }
+}`,
+    notes: [
+      "It fills the space it is given, so size it from outside, for example with a SizedBox.",
+      "Drag it to turn the whole halo. It keeps turning after you let go and slows down on its own.",
+      "Use progress for a progress ring, and leave it out for an endless loader.",
+    ],
+  },
+
   "cube-sphere": {
   summary:
       "Thousands of small glossy cubes on a sphere that tumble and breathe outward in a wave. Drag to spin it; it tilts slightly toward your finger.",

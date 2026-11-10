@@ -6,6 +6,10 @@ type RGB = [number, number, number];
 
 export type FurPalette = {
   ink: string;
+  gold: string;
+  light: boolean;
+  /** The four inks the hero art is drawn in. */
+  art: { brown: string; cream: string; gold: string; pink: string };
   slab: { fur: string; tip: string };
   pill: { fur: string; tip: string };
 };
@@ -30,6 +34,9 @@ function compute(): FurPalette {
   const s1 = read("--surface-1");
   const s2 = read("--surface-2");
   const ink = read("--ink");
+  const gold = read("--gold-text");
+  const goldDeep = read("--gold-deep");
+  const coral = read("--coral");
   probe.remove();
 
   const light = document.documentElement.dataset.theme === "light";
@@ -38,9 +45,19 @@ function compute(): FurPalette {
   const slabTip = light ? mix(slab, white, 0.6) : mix(slab, ink, 0.3);
   const pill = light ? mix(s2, ink, 0.12) : mix(s1, ink, 0.06);
   const pillTip = light ? mix(pill, white, 0.5) : mix(pill, ink, 0.3);
+  const dark = light ? ink : bg;
+  const art = {
+    brown: css(mix(dark, goldDeep, 0.35)),
+    cream: css(light ? mix(bg, white, 0.6) : ink),
+    gold: css(gold),
+    pink: css(mix(coral, white, 0.45)),
+  };
 
   return {
+    light,
+    art,
     ink: css(ink),
+    gold: css(gold),
     slab: { fur: css(slab), tip: css(slabTip) },
     pill: { fur: css(pill), tip: css(pillTip) },
   };

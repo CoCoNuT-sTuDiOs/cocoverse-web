@@ -48,4 +48,7 @@ export const ASSETS: AssetEntry[] = [
   { slug: "glass-ring", name: "Glass ring", addedAt: "2026-10-08" },
   { slug: "starfield-sphere", name: "Starfield sphere", addedAt: "2026-10-05" },
   { slug: "glossy-sphere", name: "Glossy sphere", addedAt: "2026-10-02" },
+  { slug: "timeline", name: "Timeline", addedAt: "2026-11-09" },
+  { slug: "halo", name: "Halo", addedAt: "2026-11-09" },
+  { slug: "hourglass", name: "Hourglass", addedAt: "2026-11-09" },
 ];
